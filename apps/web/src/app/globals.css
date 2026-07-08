@@ -16,6 +16,14 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Latar area app: gelap + glow oranye samar di kanan-atas. */
+.bg-app {
+  background:
+    radial-gradient(50% 40% at 100% 0%, rgba(249, 115, 22, 0.10) 0%, transparent 55%),
+    radial-gradient(40% 40% at 0% 100%, rgba(76, 45, 120, 0.18) 0%, transparent 60%),
+    #0b0f1a;
+}
+
 /* Glow dekoratif ala splash/onboarding (maroon kiri, ungu kanan). */
 .bg-aurora {
   background:
