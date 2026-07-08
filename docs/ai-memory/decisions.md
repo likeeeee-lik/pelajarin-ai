@@ -36,7 +36,16 @@
 - **Migrasi awal `init` SUDAH diterapkan ke Supabase** (`apps/api/prisma/migrations/…_init`) — semua tabel skema dibuat. Perintah: `pnpm --filter @pelajarin/api db:migrate` / `db:generate` / `db:studio`.
 - **`/me` sekarang DB-backed**: upsert Profile by `sub` (Logto/stub) → baca dari DB. Terverifikasi: 401 tanpa token, profil nyata dgn `Bearer dev`, 1 baris `Profile` (demo-user) tersimpan di Supabase.
 - Catatan: `ValidationPipe` global dilepas dari `main.ts` (butuh `class-validator` yg tidak dipasang; kita validasi pakai Zod). Prisma v6.19 (ada notice update v7, diabaikan).
-- **Belum**: Logto (auth masih `stub`), simpan onboarding/subjects/predictions ke DB (baru Profile/`/me`), Storage (butuh service key), AI.
+- **Belum**: simpan onboarding/subjects/predictions ke DB (baru Profile/`/me`), Storage (butuh service key), AI.
+
+## LOGTO (AUTH) SUDAH DI-WIRE (2026-07-08) — pending tenant user
+- Web: `@logto/next@4.2.10` terpasang. `src/lib/logto.ts` (logtoConfig dari env). Route handler: `app/api/logto/sign-in|callback|sign-out/route.ts` (pakai `signIn`/`handleSignIn`/`signOut` dari `@logto/next/server-actions`). Gate di `app/app/layout.tsx` (async server component): jika `NEXT_PUBLIC_AUTH_MODE=logto` & belum auth → redirect ke `/api/logto/sign-in` (di mode stub, dead-code dieliminasi → `/app` tetap static).
+- `lib/auth.ts` mode logto → `window.location` ke `/api/logto/{sign-in,sign-out}` (sudah sesuai). Halaman `/masuk`,`/daftar`,`/consent` hanya untuk mode stub.
+- API: guard JWT (`jose` JWKS) sudah ada sejak awal — aktif otomatis begitu `LOGTO_JWKS_URL` diisi.
+- **Redirect URI kode**: `http://localhost:3000/api/logto/callback`; sign-out → `http://localhost:3000`.
+- **Belum bisa dites** sampai user buat tenant Logto (Cloud) + isi env (web `.env.local` + api `.env`) + set `NEXT_PUBLIC_AUTH_MODE=logto`. User pilih **sekalian Google+Discord** (perlu OAuth client di Google Cloud Console + Discord Dev Portal, dikonfigurasi di Logto connectors). Panduan lengkap + cara aktivasi: `docs/SETUP-KREDENSIAL.md` (bagian B + "cara mengaktifkan").
+- `next build` sukses (route logto = dynamic ƒ). `LOGTO_API_RESOURCE` ditambah di env web (audience utk minta access token API).
+- TODO nanti: setelah callback, gate `onboardingCompleted` → arahkan user baru ke `/onboarding`; bridge access token web→API (getAccessToken) agar ApiClient kirim token asli (kini `getToken` masih null).
 
 ## Aturan kerja AI (permintaan user)
 1. **Jangan buka ulang screenshot** `docs/ss/` — semua sudah tercatat di `docs/ai-memory/app-spec.md` & `design-system.md`. Cukup baca folder ini.

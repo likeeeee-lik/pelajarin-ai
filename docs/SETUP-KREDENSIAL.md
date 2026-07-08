@@ -42,10 +42,10 @@ Rekomendasi: **Logto Cloud** (gratis, tanpa server sendiri). Alternatif self-hos
    - **Logto endpoint** (mis. `https://xxxx.logto.app/`) → env `LOGTO_ENDPOINT`
    - **App ID** → env `LOGTO_APP_ID`
    - **App Secret** → env `LOGTO_APP_SECRET`
-5. Di setting aplikasi, isi **Redirect URIs**:
-   - Sign-in redirect: `http://localhost:3000/callback`
-   - Post sign-out redirect: `http://localhost:3000`
-   *(nanti ditambah domain produksi `https://pelajarin.ai/...`)*
+5. Di setting aplikasi, isi **Redirect URIs** (PENTING — persis seperti ini, sesuai kode kita):
+   - **Redirect URI**: `http://localhost:3000/api/logto/callback`
+   - **Post sign-out redirect URI**: `http://localhost:3000`
+   *(nanti ditambah domain produksi, mis. `https://app.pelajarin.ai/api/logto/callback`)*
 6. Buat **Cookie secret** acak (string panjang) → env `LOGTO_COOKIE_SECRET`
    (mis. hasil `openssl rand -base64 32`).
 
@@ -87,9 +87,41 @@ Butuh Postgres sendiri. Lebih ribet — Cloud lebih disarankan untuk mulai.
 | `LOGTO_AUDIENCE`, `LOGTO_ISSUER`, `LOGTO_JWKS_URL` | Logto → API resource + endpoint |
 | `NEXT_PUBLIC_AUTH_MODE=logto` | diubah dari `stub` saat siap |
 
-Setelah nilai-nilai ada, saya akan: pasang SDK `@logto/next` + route auth di web,
-wire verifikasi JWT di API, jalankan `prisma migrate` ke Supabase, dan simpan
-onboarding/profil ke DB (mengganti data mock).
+---
+
+## ✅ Kode Logto SUDAH di-wire — cara mengaktifkan (setelah tenant siap)
+
+Web sudah dipasang `@logto/next` + route auth; API sudah verifikasi JWT. Kamu
+tinggal isi env & flip mode:
+
+**1. `apps/web/.env.local`** (rahasia, gitignored):
+```
+NEXT_PUBLIC_AUTH_MODE=logto        ← ubah dari "stub"
+LOGTO_ENDPOINT=https://xxxx.logto.app
+LOGTO_APP_ID=...
+LOGTO_APP_SECRET=...
+LOGTO_COOKIE_SECRET=<string acak panjang, mis. `openssl rand -base64 32`>
+LOGTO_BASE_URL=http://localhost:3000
+LOGTO_API_RESOURCE=https://api.pelajarin.ai   ← identifier API resource
+```
+
+**2. `apps/api/.env`** (rahasia, gitignored):
+```
+LOGTO_ENDPOINT=https://xxxx.logto.app
+LOGTO_ISSUER=https://xxxx.logto.app/oidc
+LOGTO_JWKS_URL=https://xxxx.logto.app/oidc/jwks
+LOGTO_AUDIENCE=https://api.pelajarin.ai       ← sama dgn LOGTO_API_RESOURCE
+```
+> Hapus/biarkan `AUTH_MODE` di API — guard otomatis pakai JWKS Logto begitu `LOGTO_JWKS_URL` terisi.
+
+**3. Route & Redirect URI yang dipakai kode (daftarkan di Logto):**
+- Redirect URI  : `http://localhost:3000/api/logto/callback`
+- Sign-out URI  : `http://localhost:3000`
+- Trigger login : `/api/logto/sign-in` · logout : `/api/logto/sign-out` (dipanggil otomatis dari tombol Masuk/Keluar)
+
+**4. Restart `pnpm dev:web` & `pnpm dev:api`.** Klik "Masuk" → diarahkan ke halaman
+Logto (Google/Discord/email) → balik ke `/app`. Halaman `/masuk`, `/daftar`,
+`/consent` kita hanya dipakai di mode `stub`.
 
 **Catatan biaya:** Supabase free tier & Logto Cloud free tier cukup untuk
 pengembangan. Tidak perlu kartu kredit untuk mulai.

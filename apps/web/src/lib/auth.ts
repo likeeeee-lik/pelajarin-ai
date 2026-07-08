@@ -50,11 +50,7 @@ export function signUpWithEmail(_input: {
 }
 
 export function completeConsent() {
-  if (isLogtoMode()) {
-    window.location.href = `/api/logto/callback`;
-    return;
-  }
-  // stub: anggap sukses → arahkan ke placeholder app
+  // Consent hanya ada di mode stub (Logto meng-host consent-nya sendiri).
   window.location.href = `/app`;
 }
 

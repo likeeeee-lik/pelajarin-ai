@@ -60,6 +60,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@logto/next':
+        specifier: ^4.2.10
+        version: 4.2.10(next@15.5.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
       '@pelajarin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -120,6 +123,10 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@edge-runtime/cookies@5.0.2':
+    resolution: {integrity: sha512-Sd8LcWpZk/SWEeKGE8LT6gMm5MGfX/wm+GPnh1eBEtCpya3vYqn37wYknwAHw92ONoyyREl1hJwxV/Qx2DWNOg==}
+    engines: {node: '>=16'}
 
   '@emnapi/runtime@1.11.2':
     resolution: {integrity: sha512-kyOl3X0DuTiT1h2ft8r2fYO8JYtU9a9Xis/zBSiGArNaagCOWx90N1k2wxp18czFDH+OgcWGb5ZP/XMt3dcyPA==}
@@ -277,6 +284,20 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
+  '@logto/client@3.1.8':
+    resolution: {integrity: sha512-f6NcPOV/K1IpPm4ccARWeYpQVMeN4mfikGg+5Qw1rcIPYPUpD5BmDsQbVTAnDepCMbC7syzRerZmbwL8S3UL+A==}
+
+  '@logto/js@6.1.2':
+    resolution: {integrity: sha512-YB/TfixPGI0Spbs8LXiKuASOKFUE9VmlTkXiPfgg3UXQsIPTU71KjKxEXZRePu3xdPNhsZ6WtnRfRvvcpP+KGQ==}
+
+  '@logto/next@4.2.10':
+    resolution: {integrity: sha512-t839AQxJDZlvbLKjcLY9lSPPNsRWCblRv8uPGmrHiARYbZ6bGt2qEU6J3bSsDRwoz0rgLymbqQGTfRCBl9SS8w==}
+    peerDependencies:
+      next: '>=12'
+
+  '@logto/node@3.1.10':
+    resolution: {integrity: sha512-vzXw4nkbMNYECf87mShtnqlevH+6jiELcTucfsq9Gynme6DEPzpKixi1Mqdo7ygJjbvBglqz/wtgjSrBzsQ0qg==}
+
   '@lukeed/csprng@1.1.0':
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
@@ -414,6 +435,10 @@ packages:
 
   '@prisma/get-platform@6.19.3':
     resolution: {integrity: sha512-xFj1VcJ1N3MKooOQAGO0W5tsd0W2QzIvW7DD7c/8H14Zmp4jseeWAITm+w2LLoLrlhoHdPPh0NMZ8mfL6puoHA==}
+
+  '@silverhand/essentials@2.9.3':
+    resolution: {integrity: sha512-OM9pyGc/yYJMVQw+fFOZZaTHXDWc45sprj+ky+QjC9inhf5w51L1WBmzAwFuYkHAwO1M19fxVf2sTH9KKP48yg==}
+    engines: {node: '>=18.12.0', pnpm: ^10.0.0}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -616,6 +641,14 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
+  camelcase-keys@9.1.3:
+    resolution: {integrity: sha512-Rircqi9ch8AnZscQcsA1C47NFdaO3wukpmIRzYcDOrmvgt78hM/sj5pZhZNec2NM12uk5vTwRHZ4anGcrC4ZTg==}
+    engines: {node: '>=16'}
+
+  camelcase@8.0.0:
+    resolution: {integrity: sha512-8WB3Jcas3swSvjIeA2yvCJ+Miyz5l1ZmB6HFb9R1317dt9LCQoswg/BGrmAmkWVEszSrrg4RwmO46qIm2OEnSA==}
+    engines: {node: '>=16'}
+
   caniuse-lite@1.0.30001803:
     resolution: {integrity: sha512-g/uHREV2ZpK9qMalCsWaxmA6ol+DX8GYhuf3T40RKoP+oL7vhRJh8LNt73PCjpnR6l14FzfPrB5Yux4PKm2meg==}
 
@@ -682,6 +715,10 @@ packages:
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
 
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
@@ -962,6 +999,9 @@ packages:
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
+  js-base64@3.8.0:
+    resolution: {integrity: sha512-65kvbemyZhj+ExQt1PEFyBEjL5vAHysu1lJdW1AwhhChkO8ZBPizYk/m9GVrpbS2Je1hF+UYZ+6KywqtZV8mHw==}
+
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
     engines: {node: '>=14'}
@@ -976,6 +1016,10 @@ packages:
 
   make-error@1.3.6:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
+
+  map-obj@5.0.0:
+    resolution: {integrity: sha512-2L3MIgJynYrZ3TYMriLDLWocz15okFakV6J12HXvMXDHui2x/zgChzg1u9mFFGbbGWE+GsLpQByt4POb9Or+uA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -1238,6 +1282,10 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  quick-lru@6.1.2:
+    resolution: {integrity: sha512-AAFUA5O1d83pIHEhJwWCq/RQcRukCkn/NSm2QsTEMle5f2hP0ChI2+3Xb051PZCkLryI/Ir1MVKviT2FIloaTQ==}
+    engines: {node: '>=12'}
+
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
     engines: {node: '>= 0.6'}
@@ -1478,6 +1526,10 @@ packages:
     resolution: {integrity: sha512-GQpduILaKjoaGljw097ScsSyKTtZSY7cZ3bJktzfTkPMyCf3ShKLuXK2IaOEN2Plziml+ArR7WJ1m+V4VbnaKQ==}
     hasBin: true
 
+  type-fest@4.41.0:
+    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
+    engines: {node: '>=16'}
+
   type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
@@ -1554,6 +1606,8 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@edge-runtime/cookies@5.0.2': {}
 
   '@emnapi/runtime@1.11.2':
     dependencies:
@@ -1676,6 +1730,31 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@logto/client@3.1.8':
+    dependencies:
+      '@logto/js': 6.1.2
+      '@silverhand/essentials': 2.9.3
+      camelcase-keys: 9.1.3
+      jose: 5.10.0
+
+  '@logto/js@6.1.2':
+    dependencies:
+      '@silverhand/essentials': 2.9.3
+      camelcase-keys: 9.1.3
+
+  '@logto/next@4.2.10(next@15.5.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7))':
+    dependencies:
+      '@edge-runtime/cookies': 5.0.2
+      '@logto/node': 3.1.10
+      cookie: 1.1.1
+      next: 15.5.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+
+  '@logto/node@3.1.10':
+    dependencies:
+      '@logto/client': 3.1.8
+      '@silverhand/essentials': 2.9.3
+      js-base64: 3.8.0
+
   '@lukeed/csprng@1.1.0': {}
 
   '@nestjs/common@10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2)':
@@ -1797,6 +1876,8 @@ snapshots:
   '@prisma/get-platform@6.19.3':
     dependencies:
       '@prisma/debug': 6.19.3
+
+  '@silverhand/essentials@2.9.3': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -2007,6 +2088,15 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
+  camelcase-keys@9.1.3:
+    dependencies:
+      camelcase: 8.0.0
+      map-obj: 5.0.0
+      quick-lru: 6.1.2
+      type-fest: 4.41.0
+
+  camelcase@8.0.0: {}
+
   caniuse-lite@1.0.30001803: {}
 
   chalk@4.1.2:
@@ -2070,6 +2160,8 @@ snapshots:
   cookie-signature@1.0.7: {}
 
   cookie@0.7.2: {}
+
+  cookie@1.1.1: {}
 
   cors@2.8.5:
     dependencies:
@@ -2349,6 +2441,8 @@ snapshots:
 
   jose@5.10.0: {}
 
+  js-base64@3.8.0: {}
+
   lilconfig@3.1.3: {}
 
   lines-and-columns@1.2.4: {}
@@ -2358,6 +2452,8 @@ snapshots:
       react: 19.2.7
 
   make-error@1.3.6: {}
+
+  map-obj@5.0.0: {}
 
   math-intrinsics@1.1.0: {}
 
@@ -2567,6 +2663,8 @@ snapshots:
       side-channel: 1.1.1
 
   queue-microtask@1.2.3: {}
+
+  quick-lru@6.1.2: {}
 
   range-parser@1.2.1: {}
 
@@ -2886,6 +2984,8 @@ snapshots:
       '@turbo/linux-arm64': 2.10.4
       '@turbo/windows-64': 2.10.4
       '@turbo/windows-arm64': 2.10.4
+
+  type-fest@4.41.0: {}
 
   type-is@1.6.18:
     dependencies:
