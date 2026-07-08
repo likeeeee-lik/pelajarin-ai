@@ -1,15 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { completeConsent } from "@/lib/auth";
+import { isLogtoMode, completeConsent } from "@/lib/auth";
 
 export function ConsentActions() {
   const router = useRouter();
+
+  function onAllow() {
+    if (isLogtoMode()) {
+      completeConsent();
+      return;
+    }
+    // stub: user baru (register) → onboarding; login lama → app
+    const flow = new URLSearchParams(window.location.search).get("flow");
+    router.push(flow === "register" ? "/onboarding" : "/app");
+  }
+
   return (
     <div className="flex flex-col items-center gap-3">
       <button
         type="button"
-        onClick={() => completeConsent()}
+        onClick={onAllow}
         className="w-full rounded-2xl bg-brand px-5 py-3.5 text-sm font-bold text-white shadow-brand transition hover:bg-brand-600 active:translate-y-px"
       >
         Allow access

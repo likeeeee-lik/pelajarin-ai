@@ -33,12 +33,18 @@ function DiscordIcon() {
   );
 }
 
-export function OAuthButtons({ verb = "Masuk" }: { verb?: string }) {
+export function OAuthButtons({
+  verb = "Masuk",
+  flow,
+}: {
+  verb?: string;
+  flow?: "register";
+}) {
   return (
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => signInWith("google")}
+        onClick={() => signInWith("google", flow)}
         className="flex w-full items-center justify-center gap-3 rounded-2xl border border-ink-500 bg-ink-700/60 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-ink-500/60"
       >
         <GoogleIcon />
@@ -46,7 +52,7 @@ export function OAuthButtons({ verb = "Masuk" }: { verb?: string }) {
       </button>
       <button
         type="button"
-        onClick={() => signInWith("discord")}
+        onClick={() => signInWith("discord", flow)}
         className="flex w-full items-center justify-center gap-3 rounded-2xl border border-ink-500 bg-ink-700/60 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-ink-500/60"
       >
         <span className="text-[#5865F2]">

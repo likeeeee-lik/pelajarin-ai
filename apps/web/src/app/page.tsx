@@ -22,7 +22,7 @@ export default function EntryPage() {
         </p>
 
         <div className="mt-8 text-left">
-          <OAuthButtons verb="Daftar" />
+          <OAuthButtons verb="Daftar" flow="register" />
           <OrDivider />
           <EmailSignupButton />
         </div>

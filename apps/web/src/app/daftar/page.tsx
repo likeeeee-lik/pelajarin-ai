@@ -9,7 +9,7 @@ export default function DaftarPage() {
       title="Buat akun"
       subtitle="Mulai belajar dengan AI di Pelajarin.ai"
     >
-      <OAuthButtons verb="Daftar" />
+      <OAuthButtons verb="Daftar" flow="register" />
       <OrDivider />
       <SignUpForm />
       <p className="mt-5 text-center text-sm text-muted">

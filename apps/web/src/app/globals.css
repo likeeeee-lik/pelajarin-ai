@@ -34,3 +34,39 @@ body {
     @apply rounded-xl2 border border-ink-500/70 bg-ink-600/60 backdrop-blur;
   }
 }
+
+/* Slider bergaya brand: track terisi oranye + thumb bulat oranye. */
+.range-brand {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #f97316 0%,
+    #f97316 var(--pct, 50%),
+    #232b3d var(--pct, 50%),
+    #232b3d 100%
+  );
+  outline: none;
+  cursor: pointer;
+}
+.range-brand::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 3px solid #f97316;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
+  cursor: pointer;
+}
+.range-brand::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 3px solid #f97316;
+  cursor: pointer;
+}

@@ -18,13 +18,15 @@ export function isLogtoMode() {
   return MODE === "logto";
 }
 
-export function signInWith(provider: OAuthProvider) {
+export function signInWith(provider: OAuthProvider, flow?: "register") {
   if (isLogtoMode()) {
-    window.location.href = `/api/logto/sign-in?provider=${provider}`;
+    const screen = flow === "register" ? "&first_screen=register" : "";
+    window.location.href = `/api/logto/sign-in?provider=${provider}${screen}`;
     return;
   }
   // stub: langsung ke halaman consent seperti flow OIDC
-  window.location.href = `/consent?provider=${provider}`;
+  const q = flow ? `&flow=${flow}` : "";
+  window.location.href = `/consent?provider=${provider}${q}`;
 }
 
 export function signInWithEmail(_email: string, _password: string) {
