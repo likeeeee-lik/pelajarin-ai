@@ -7,6 +7,7 @@ import { ChevronLeft, LogOut, Rocket, User } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { signOut } from "@/lib/auth";
 import { MOCK_USER } from "@/lib/mock-user";
+import { useProfileSettings } from "@/lib/store";
 import { NAV_ITEMS, isActive } from "./nav-config";
 
 export function Sidebar({
@@ -17,6 +18,7 @@ export function Sidebar({
   onToggle: () => void;
 }) {
   const pathname = usePathname();
+  const profile = useProfileSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const upgradeActive = pathname.startsWith("/app/upgrade");
 
@@ -93,7 +95,7 @@ export function Sidebar({
             />
             <div className="absolute bottom-full left-0 z-20 mb-2 w-52 overflow-hidden rounded-xl border border-ink-500 bg-ink-700 shadow-xl">
               <div className="border-b border-ink-500 px-4 py-3">
-                <p className="truncate font-semibold">{MOCK_USER.nama}</p>
+                <p className="truncate font-semibold">{profile.nama}</p>
                 <p className="truncate text-xs text-muted">{MOCK_USER.email}</p>
               </div>
               <Link
@@ -120,10 +122,10 @@ export function Sidebar({
             collapsed ? "justify-center" : ""
           }`}
         >
-          <Avatar name={MOCK_USER.nama} />
+          <Avatar name={profile.nama} />
           {!collapsed && (
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{MOCK_USER.nama}</span>
+              <span className="block truncate text-sm font-semibold">{profile.nama}</span>
               <span className="block truncate text-xs text-muted">{MOCK_USER.email}</span>
             </span>
           )}

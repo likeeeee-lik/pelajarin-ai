@@ -1,34 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { BookOpen, Folder, Plus, Trash2 } from "lucide-react";
-
-interface Subject {
-  id: string;
-  nama: string;
-  catatan: number;
-}
-
-let seq = 1;
+import { addSubject, removeSubject, useMaterials, useSubjects } from "@/lib/store";
 
 export default function MataPelajaranPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const subjects = useSubjects();
+  const materials = useMaterials();
   const [nama, setNama] = useState("");
 
-  const totalCatatan = useMemo(
-    () => subjects.reduce((s, x) => s + x.catatan, 0),
-    [subjects],
-  );
+  const totalCatatan = materials.length;
+  const catatanOf = (id: string) => materials.filter((m) => m.subjectId === id).length;
 
   function add() {
     const trimmed = nama.trim();
     if (!trimmed) return;
-    setSubjects((prev) => [...prev, { id: `s${seq++}`, nama: trimmed, catatan: 0 }]);
+    addSubject(trimmed);
     setNama("");
-  }
-
-  function remove(id: string) {
-    setSubjects((prev) => prev.filter((s) => s.id !== id));
   }
 
   return (
@@ -44,7 +32,6 @@ export default function MataPelajaranPage() {
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Tambah */}
         <div className="card p-6">
           <h2 className="text-lg font-bold">Tambah Mata Pelajaran Baru</h2>
           <div className="mt-4 flex gap-3">
@@ -66,7 +53,6 @@ export default function MataPelajaranPage() {
           </div>
         </div>
 
-        {/* Statistik */}
         <div className="card p-6">
           <h2 className="text-lg font-bold">Statistik</h2>
           <div className="mt-4 flex gap-10">
@@ -82,7 +68,6 @@ export default function MataPelajaranPage() {
         </div>
       </div>
 
-      {/* Daftar */}
       <section>
         <h2 className="mb-4 text-xl font-bold">Daftar Mata Pelajaran</h2>
         {subjects.length === 0 ? (
@@ -102,11 +87,11 @@ export default function MataPelajaranPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">{s.nama}</p>
-                  <p className="text-xs text-muted">{s.catatan} catatan</p>
+                  <p className="text-xs text-muted">{catatanOf(s.id)} catatan</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => remove(s.id)}
+                  onClick={() => removeSubject(s.id)}
                   aria-label={`Hapus ${s.nama}`}
                   className="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-red-500/10 hover:text-red-400"
                 >

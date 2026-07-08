@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   BookOpen,
+  Check,
   ClipboardList,
   CreditCard,
   FileText,
@@ -14,26 +15,40 @@ import {
   User,
 } from "lucide-react";
 import { MOCK_USER } from "@/lib/mock-user";
-import {
-  BAHASA_GENERASI,
-  BAHASA_TAMPILAN,
-  MOCK_PROFILE_STATS,
-  MOCK_SUBSCRIPTION,
-} from "@/lib/mock-profile";
+import { BAHASA_GENERASI, BAHASA_TAMPILAN, MOCK_SUBSCRIPTION } from "@/lib/mock-profile";
 import { ActivityHeatmap } from "@/components/app/profil/activity-heatmap";
-
-const STATS = [
-  { label: "Total Catatan", value: MOCK_PROFILE_STATS.totalCatatan, icon: FileText, color: "text-sky-400 bg-sky-400/15" },
-  { label: "Flashcard Dibuat", value: MOCK_PROFILE_STATS.flashcardDibuat, icon: BookOpen, color: "text-emerald-400 bg-emerald-400/15" },
-  { label: "Kuis Dibuat", value: MOCK_PROFILE_STATS.kuisDibuat, icon: ClipboardList, color: "text-purple-400 bg-purple-400/15" },
-  { label: "Prediksi Ujian", value: MOCK_PROFILE_STATS.prediksiUjian, icon: Target, color: "text-red-400 bg-red-400/15" },
-  { label: "Total File", value: MOCK_PROFILE_STATS.totalFile, icon: BarChart3, color: "text-brand bg-brand/15" },
-];
+import { saveProfile, useMaterials, usePredictions, useProfileSettings } from "@/lib/store";
 
 export default function ProfilPage() {
-  const [nama, setNama] = useState(MOCK_USER.nama);
-  const [bahasaTampilan, setBahasaTampilan] = useState("id");
-  const [bahasaGenerasi, setBahasaGenerasi] = useState("id");
+  const profile = useProfileSettings();
+  const materials = useMaterials();
+  const predictions = usePredictions();
+
+  const [nama, setNama] = useState(profile.nama);
+  const [bahasaTampilan, setBahasaTampilan] = useState(profile.bahasaTampilan);
+  const [bahasaGenerasi, setBahasaGenerasi] = useState(profile.bahasaGenerasi);
+  const [saved, setSaved] = useState(false);
+
+  // sinkronkan form bila store berubah dari tempat lain
+  useEffect(() => {
+    setNama(profile.nama);
+    setBahasaTampilan(profile.bahasaTampilan);
+    setBahasaGenerasi(profile.bahasaGenerasi);
+  }, [profile.nama, profile.bahasaTampilan, profile.bahasaGenerasi]);
+
+  const stats = [
+    { label: "Total Catatan", value: materials.length, icon: FileText, color: "text-sky-400 bg-sky-400/15" },
+    { label: "Flashcard Dibuat", value: 0, icon: BookOpen, color: "text-emerald-400 bg-emerald-400/15" },
+    { label: "Kuis Dibuat", value: 0, icon: ClipboardList, color: "text-purple-400 bg-purple-400/15" },
+    { label: "Prediksi Ujian", value: predictions.length, icon: Target, color: "text-red-400 bg-red-400/15" },
+    { label: "Total File", value: materials.filter((m) => m.tipe !== "note").length, icon: BarChart3, color: "text-brand bg-brand/15" },
+  ];
+
+  function simpan() {
+    saveProfile({ nama: nama.trim() || "Pengguna", bahasaTampilan, bahasaGenerasi });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,9 +57,8 @@ export default function ProfilPage() {
         <p className="text-sm text-muted">Kelola informasi dan preferensi akun Anda</p>
       </header>
 
-      {/* 5 stat */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <div key={s.label} className="card p-5 text-center">
             <span className={`mx-auto grid h-11 w-11 place-items-center rounded-xl ${s.color}`}>
               <s.icon className="h-5 w-5" />
@@ -56,7 +70,6 @@ export default function ProfilPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Pengaturan Profil */}
         <div className="card p-6">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/15 text-brand">
@@ -75,17 +88,11 @@ export default function ProfilPage() {
 
             <Field label="Email" icon={<Mail className="h-4 w-4 text-brand" />}>
               <input value={MOCK_USER.email} disabled className="input-field opacity-60" />
-              <p className="mt-1 text-xs text-muted">
-                Email terikat dengan akun dan tidak dapat diubah
-              </p>
+              <p className="mt-1 text-xs text-muted">Email terikat dengan akun dan tidak dapat diubah</p>
             </Field>
 
             <Field label="Bahasa Tampilan">
-              <select
-                value={bahasaTampilan}
-                onChange={(e) => setBahasaTampilan(e.target.value)}
-                className="input-field"
-              >
+              <select value={bahasaTampilan} onChange={(e) => setBahasaTampilan(e.target.value)} className="input-field">
                 {BAHASA_TAMPILAN.map((b) => (
                   <option key={b.value} value={b.value} className="bg-ink-700">
                     {b.label}
@@ -96,11 +103,7 @@ export default function ProfilPage() {
             </Field>
 
             <Field label="Bahasa Generasi">
-              <select
-                value={bahasaGenerasi}
-                onChange={(e) => setBahasaGenerasi(e.target.value)}
-                className="input-field"
-              >
+              <select value={bahasaGenerasi} onChange={(e) => setBahasaGenerasi(e.target.value)} className="input-field">
                 {BAHASA_GENERASI.map((b) => (
                   <option key={b.value} value={b.value} className="bg-ink-700">
                     {b.label}
@@ -114,15 +117,20 @@ export default function ProfilPage() {
 
             <button
               type="button"
-              // TODO(API): PATCH /me
-              className="rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition hover:bg-brand-600"
+              onClick={simpan}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition hover:bg-brand-600"
             >
-              Simpan
+              {saved ? (
+                <>
+                  <Check className="h-5 w-5" /> Tersimpan
+                </>
+              ) : (
+                "Simpan"
+              )}
             </button>
           </div>
         </div>
 
-        {/* Langganan */}
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -159,9 +167,7 @@ export default function ProfilPage() {
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink-500/60">
                     <div className={`h-full rounded-full ${q.color}`} style={{ width: `${pct}%` }} />
                   </div>
-                  {q.resetDate ? (
-                    <p className="mt-2 text-xs text-muted">Atur Ulang: {q.resetDate}</p>
-                  ) : null}
+                  {q.resetDate ? <p className="mt-2 text-xs text-muted">Atur Ulang: {q.resetDate}</p> : null}
                 </div>
               );
             })}

@@ -66,6 +66,18 @@
   1. Arsitektur auth: (A) layar **native Expo** dark + **Supabase Auth** [rekomendasi, cepat & sesuai stack] vs (B) replikasi persis **hosted OIDC** (Better Auth/Logto di auth.pelajarin.ai) dengan halaman consent putih.
   2. Scope tahap pertama: **UI-only** (layar statis dulu, belum ada auth nyata) vs **fully-wired** (langsung tersambung Supabase — butuh project Supabase + kredensial Google OAuth).
 
+## FITUR DASHBOARD FUNGSIONAL via client store (2026-07-08) — permintaan user
+User minta fitur di dashboard "benar-benar berfungsi". Karena backend AI belum ada,
+dibuat lapisan **client store berbasis localStorage**: `apps/web/src/lib/store.ts`
+(pakai `useSyncExternalStore`). Entitas: `subjects`, `materials`, `predictions`,
+`profile` (+ mutators addSubject/removeSubject/addMaterial/removeMaterial/addPrediction/saveProfile).
+Data **bertahan saat refresh** & **saling terhubung antar halaman**.
+- **Dashboard** (`app/app/page.tsx` + `components/app/dashboard/dashboard-client.tsx`): tombol "Buat baru" & 5 kartu sumber membuka **`CreateMaterialModal`** (Tulis Catatan = editor teks → status "Siap"; File/YouTube/Audio/Video → status "Diproses"). Materi tampil di **`Collection`** ("Koleksi Kamu"); bisa hapus. Empty state bila kosong.
+- **Mata Pelajaran**: tambah/hapus subjek → store; hitung catatan per subjek dari materials.
+- **Latihan Soal**: prediksi tersimpan di store (persist).
+- **Profil**: 5 stat card dihitung dari store (Total Catatan=materials, Prediksi=predictions, Total File=materials non-note); tombol **Simpan** menulis nama+bahasa ke store → "Tersimpan ✓"; **nama tersinkron** ke Greeting & Sidebar.
+- Semua ditandai `TODO(API)`: ganti store→API saat Logto+DB aktif. `next build` JANGAN dijalankan saat `next dev` aktif (mengunci/menghapus `.next` → dev rusak & butuh `rm -rf .next` + restart). Verifikasi via typecheck + dev.
+
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:
 - Landing **"Mulai Gratis Sekarang" → `/onboarding`** (wizard, tanpa login).

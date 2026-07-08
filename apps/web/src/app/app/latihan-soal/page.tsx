@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Plus, Sparkles, Target } from "lucide-react";
 import { CreatePredictionModal } from "@/components/app/latihan-soal/create-modal";
-import type { Prediction } from "@/components/app/latihan-soal/create-modal";
 import { PredictionCard } from "@/components/app/latihan-soal/prediction-card";
+import { addPrediction, usePredictions } from "@/lib/store";
 
 export default function LatihanSoalPage() {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<Prediction[]>([]);
+  const items = usePredictions();
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,7 +61,7 @@ export default function LatihanSoalPage() {
         <CreatePredictionModal
           onClose={() => setOpen(false)}
           onCreate={(p) => {
-            setItems((prev) => [p, ...prev]);
+            addPrediction({ judul: p.judul, mapel: p.mapel, tipe: p.tipe, fileCount: p.fileCount });
             setOpen(false);
           }}
         />

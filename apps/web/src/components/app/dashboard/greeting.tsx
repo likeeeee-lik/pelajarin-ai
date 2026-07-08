@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Rocket } from "lucide-react";
-import { MOCK_USER } from "@/lib/mock-user";
+import { useProfileSettings } from "@/lib/store";
 
 /** Sapaan + tanggal hari ini (id-ID) + tombol Tingkatkan Pro. */
 export function Greeting() {
+  const profile = useProfileSettings();
   const [tanggal, setTanggal] = useState("");
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function Greeting() {
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">
-          Halo, {MOCK_USER.nama}! <span className="align-middle">👋</span>
+          Halo, {profile.nama}! <span className="align-middle">👋</span>
         </h1>
         <p className="mt-1 text-muted">{tanggal || " "}</p>
       </div>

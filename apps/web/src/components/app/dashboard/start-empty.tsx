@@ -2,9 +2,10 @@
 
 import { Telescope } from "lucide-react";
 import { SOURCES } from "./sources";
+import type { MaterialType } from "@/lib/store";
 
 /** Empty state dashboard: ajakan mulai + 5 kartu sumber materi. */
-export function StartEmpty() {
+export function StartEmpty({ onPick }: { onPick: (source: MaterialType) => void }) {
   return (
     <div className="card p-8 text-center">
       <span className="mx-auto grid h-20 w-20 place-items-center rounded-2xl bg-brand/15 text-brand">
@@ -23,7 +24,7 @@ export function StartEmpty() {
             <button
               key={s.id}
               type="button"
-              // TODO(W): buka flow pembuatan materi.
+              onClick={() => onPick(s.id as MaterialType)}
               className="flex flex-col items-center gap-3 rounded-2xl border border-ink-500/60 bg-ink-700/40 p-5 text-center transition hover:border-brand/60 hover:bg-ink-600"
             >
               <span className={`grid h-12 w-12 place-items-center rounded-xl ${s.color}`}>
