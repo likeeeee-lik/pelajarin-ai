@@ -28,6 +28,15 @@
 - Install: `COREPACK_HOME="$HOME/.cache/corepack" corepack pnpm@9.15.0 install`
 - Web: `pnpm dev:web` (port 3000) · API: `pnpm dev:api` (port 4000). Semua via turbo.
 - Mode auth diatur `NEXT_PUBLIC_AUTH_MODE` (default `stub`).
+- **Kredensial**: file rahasia (gitignored) = `apps/api/.env` (Supabase DB/keys, Logto, AI) & `apps/web/.env.local` (auth mode, Logto web). Jangan taruh secret di `.env.example` (committed).
+
+## DATABASE TERSAMBUNG (2026-07-08) — Supabase live
+- User sudah isi kredensial Supabase di `apps/api/.env` (project `ftbmnwfatzkeyjprqmks`, region `ap-southeast-1`). `SUPABASE_SERVICE_KEY` **masih kosong** (belum wajib; baru perlu utk Storage/upload).
+- API: tambah `@prisma/client` + `prisma` + `dotenv` (di-load di `main.ts` baris pertama). `PrismaModule`(global)+`PrismaService`. Prisma datasource pakai `directUrl` (migrate) + pooler `DATABASE_URL` (runtime).
+- **Migrasi awal `init` SUDAH diterapkan ke Supabase** (`apps/api/prisma/migrations/…_init`) — semua tabel skema dibuat. Perintah: `pnpm --filter @pelajarin/api db:migrate` / `db:generate` / `db:studio`.
+- **`/me` sekarang DB-backed**: upsert Profile by `sub` (Logto/stub) → baca dari DB. Terverifikasi: 401 tanpa token, profil nyata dgn `Bearer dev`, 1 baris `Profile` (demo-user) tersimpan di Supabase.
+- Catatan: `ValidationPipe` global dilepas dari `main.ts` (butuh `class-validator` yg tidak dipasang; kita validasi pakai Zod). Prisma v6.19 (ada notice update v7, diabaikan).
+- **Belum**: Logto (auth masih `stub`), simpan onboarding/subjects/predictions ke DB (baru Profile/`/me`), Storage (butuh service key), AI.
 
 ## Aturan kerja AI (permintaan user)
 1. **Jangan buka ulang screenshot** `docs/ss/` — semua sudah tercatat di `docs/ai-memory/app-spec.md` & `design-system.md`. Cukup baca folder ini.

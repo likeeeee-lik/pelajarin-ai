@@ -1,6 +1,6 @@
+import "dotenv/config";
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -10,7 +10,6 @@ async function bootstrap() {
     origin: (process.env.WEB_ORIGIN ?? "http://localhost:3000").split(","),
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
   const port = Number(process.env.API_PORT ?? 4000);
   await app.listen(port);
