@@ -68,7 +68,7 @@ export default function LandingPage() {
             ringkasan, flashcard, dan kuis dalam sekejap.
           </p>
           <Link
-            href="/daftar"
+            href="/onboarding"
             className="mt-8 inline-flex rounded-2xl bg-brand px-8 py-4 font-bold text-white shadow-brand transition hover:bg-brand-600"
           >
             Mulai Gratis Sekarang →
@@ -161,7 +161,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-extrabold">Siap Revolusi Cara Belajarmu?</h2>
           <p className="mt-2 text-muted">Gabung dengan ribuan siswa cerdas lainnya. Mulai gratis.</p>
           <Link
-            href="/daftar"
+            href="/onboarding"
             className="mt-6 inline-flex rounded-2xl bg-brand px-8 py-4 font-bold text-white shadow-brand transition hover:bg-brand-600"
           >
             Mulai Gratis Sekarang

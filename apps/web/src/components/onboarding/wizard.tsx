@@ -94,14 +94,15 @@ export function OnboardingWizard() {
   }
 
   if (stage === "result") {
-    // TODO(API): POST /onboarding { answers, scores } saat Logto+DB aktif.
+    // Funnel: onboarding dulu → daftar utk simpan profil & masuk app.
+    // TODO(API): POST /onboarding { answers, scores } setelah user terdaftar.
     return (
       <main className="bg-aurora min-h-screen">
         <ResultScreen
           scores={scores}
           answersCount={total}
-          onStartPro={() => router.push("/app")}
-          onSkip={() => router.push("/app")}
+          onStartPro={() => router.push("/daftar")}
+          onSkip={() => router.push("/daftar")}
         />
       </main>
     );

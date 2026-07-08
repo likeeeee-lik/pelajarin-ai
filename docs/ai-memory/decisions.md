@@ -66,6 +66,14 @@
   1. Arsitektur auth: (A) layar **native Expo** dark + **Supabase Auth** [rekomendasi, cepat & sesuai stack] vs (B) replikasi persis **hosted OIDC** (Better Auth/Logto di auth.pelajarin.ai) dengan halaman consent putih.
   2. Scope tahap pertama: **UI-only** (layar statis dulu, belum ada auth nyata) vs **fully-wired** (langsung tersambung Supabase — butuh project Supabase + kredensial Google OAuth).
 
+## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
+Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:
+- Landing **"Mulai Gratis Sekarang" → `/onboarding`** (wizard, tanpa login).
+- Onboarding selesai (result) → **`/daftar`** (buat akun) → consent → `/app`.
+- Navbar **"Masuk" → `/masuk`** (login) → consent → `/app`.
+- consent-actions: register & login sama-sama → `/app` (tidak balik ke onboarding, hindari loop).
+- (Nanti dgn Logto/DB: simpan jawaban onboarding setelah user terdaftar.)
+
 ## Keputusan sesi (2026-07-08, lanjutan)
 - User **belum punya** kredensial Logto/Supabase. Panduan dibuat: `docs/SETUP-KREDENSIAL.md`.
 - **Pilihan user**: lanjut bangun UI dulu (Mata Pelajaran, Profil) pakai mock; **wiring Logto+Supabase dilakukan nanti** saat kredensial siap.

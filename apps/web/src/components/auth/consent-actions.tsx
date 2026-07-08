@@ -11,9 +11,9 @@ export function ConsentActions() {
       completeConsent();
       return;
     }
-    // stub: user baru (register) → onboarding; login lama → app
-    const flow = new URLSearchParams(window.location.search).get("flow");
-    router.push(flow === "register" ? "/onboarding" : "/app");
+    // Onboarding sudah dilakukan sebelum daftar (funnel), jadi register & login
+    // sama-sama masuk ke app.
+    router.push("/app");
   }
 
   return (
