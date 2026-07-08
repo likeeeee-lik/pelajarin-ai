@@ -13,6 +13,9 @@ export interface MockUser {
   ranking: number | null;
   kartuHariIni: number;
   plan: "free" | "pro" | "institusi";
+  flashcardDireview: number;
+  kuisLulus: number;
+  kuisSempurna: number;
 }
 
 export const MOCK_USER: MockUser = {
@@ -26,4 +29,7 @@ export const MOCK_USER: MockUser = {
   ranking: null,
   kartuHariIni: 0,
   plan: "free",
+  flashcardDireview: 0,
+  kuisLulus: 0,
+  kuisSempurna: 0,
 };
