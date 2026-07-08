@@ -1,0 +1,247 @@
+// Skema database Pelajarin.ai (Postgres @ Supabase).
+// STATUS: dokumen sumber-kebenaran. Belum di-wire (belum `prisma generate`/migrate)
+// sampai kredensial Supabase (DATABASE_URL) tersedia. Lihat docs/RENCANA-WEB.md.
+// Auth = Logto (OIDC); `Profile.id` = Logto subject (sub).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  free
+  pro
+  institusi
+}
+
+enum MaterialType {
+  file
+  youtube
+  audio
+  video
+  note
+}
+
+enum MaterialStatus {
+  processing
+  ready
+  failed
+}
+
+enum ExamType {
+  uts
+  uas
+  kuis
+  latihan
+}
+
+enum AiPersona {
+  militer
+  guru_bk
+  teman_sebaya
+  profesor
+}
+
+model Profile {
+  id             String   @id // Logto subject (sub)
+  email          String   @unique
+  nama           String
+  avatarUrl      String?
+  plan           Plan     @default(free)
+  bahasaTampilan String   @default("id")
+  bahasaGenerasi String   @default("id")
+  xp             Int      @default(0)
+  level          Int      @default(1)
+  onboardingDone Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  onboardingAnswers OnboardingAnswer[]
+  cognitiveScore    CognitiveScore?
+  personaPref       PersonaPref?
+  subjects          Subject[]
+  materials         Material[]
+  examPredictions   ExamPrediction[]
+  chatSessions      ChatSession[]
+  xpEvents          XpEvent[]
+  streak            Streak?
+  usageQuota        UsageQuota[]
+  subscription      Subscription?
+  referral          Referral?
+}
+
+model OnboardingAnswer {
+  id          String  @id @default(cuid())
+  userId      String
+  questionKey String
+  valueJson   Json
+  user        Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionKey])
+}
+
+model CognitiveScore {
+  userId        String  @id
+  ambisi        Int     @default(50)
+  energi        Int     @default(50)
+  teoriPraktek  Int     @default(50)
+  memori        Int     @default(50)
+  fokus         Int     @default(50)
+  stres         Int     @default(50)
+  kecepatan     Int     @default(50)
+  motivasi      Int     @default(50)
+  user          Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PersonaPref {
+  userId         String    @id
+  persona        AiPersona @default(guru_bk)
+  outputBahasa   String    @default("id_santai")
+  gayaJawaban    String?
+  goldenHours    Json? // kurva energi per jam
+  user           Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subject {
+  id        String     @id @default(cuid())
+  userId    String
+  nama      String
+  warna     String?
+  createdAt DateTime   @default(now())
+  user      Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materials Material[]
+}
+
+model Material {
+  id        String         @id @default(cuid())
+  userId    String
+  subjectId String?
+  judul     String
+  tipe      MaterialType
+  sourceUrl String?
+  status    MaterialStatus @default(processing)
+  rawText   String?        @db.Text
+  createdAt DateTime       @default(now())
+
+  user     Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject  Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  notes    Note[]
+  cards    Flashcard[]
+  quizzes  Quiz[]
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  materialId String
+  userId     String
+  kontenMd   String   @db.Text
+  createdAt  DateTime @default(now())
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+model Flashcard {
+  id          String    @id @default(cuid())
+  materialId  String
+  userId      String
+  front       String    @db.Text
+  back        String    @db.Text
+  reviewDueAt DateTime?
+  ease        Float     @default(2.5)
+  interval    Int       @default(0)
+  material    Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id         String   @id @default(cuid())
+  materialId String
+  userId     String
+  soalJson   Json
+  skor       Int?
+  createdAt  DateTime @default(now())
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+model ExamPrediction {
+  id          String   @id @default(cuid())
+  userId      String
+  subjectId   String?
+  judul       String
+  tipe        ExamType
+  sourceFiles Json?
+  prediksiJson Json?
+  createdAt   DateTime @default(now())
+  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatSession {
+  id         String        @id @default(cuid())
+  userId     String
+  materialId String?
+  persona    AiPersona     @default(guru_bk)
+  createdAt  DateTime      @default(now())
+  user       Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      String // user | assistant | system
+  konten    String      @db.Text
+  createdAt DateTime    @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  sumber    String
+  jumlahXp  Int
+  createdAt DateTime @default(now())
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Streak {
+  userId     String    @id
+  current    Int       @default(0)
+  best       Int       @default(0)
+  lastActive DateTime?
+  user       Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UsageQuota {
+  id        String  @id @default(cuid())
+  userId    String
+  minggu    String // ISO week, mis "2026-W28"
+  catatan   Int     @default(0)
+  chat      Int     @default(0)
+  prediksi  Int     @default(0)
+  user      Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, minggu])
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  plan        Plan     @default(free)
+  status      String   @default("active")
+  provider    String? // midtrans | xendit
+  providerRef String?
+  mulai       DateTime @default(now())
+  berakhir    DateTime?
+  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  kode       String   @unique
+  referredBy String?
+  createdAt  DateTime @default(now())
+  user       Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

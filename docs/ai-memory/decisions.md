@@ -1,0 +1,49 @@
+# Keputusan & Aturan Kerja — Pelajarin.ai
+
+## Stack FINAL (dikunci 2026-07-08, sesi ke-2)
+- **Urutan kerja**: WEB dulu → mobile menyusul.
+- **Web frontend**: Next.js (TypeScript) — konsumsi API bersama.
+- **Backend API BERSAMA**: **NestJS** (REST + JSON, JWT) + **Prisma** — satu API untuk web & mobile. Semua logika & panggilan AI di sini (bukan di client).
+- **Auth**: **Logto** (OIDC provider di `auth.pelajarin.ai`) — Sign in/Create account/Consent/account portal sesuai screenshot. SDK Next.js (web) & Expo (mobile).
+- **Database**: **Supabase** dipakai sebagai **Postgres + Storage** saja (auth = Logto, bukan Supabase Auth).
+- **Mobile**: Expo (React Native, TS) + expo-router — menyusul, konsumsi API yang sama.
+- **AI teks**: Anthropic Claude (Sonnet umum, Opus untuk prediksi ujian).
+- **Transkripsi**: Whisper via Groq. **YouTube**: youtube-transcript. **Parsing dokumen**: LlamaParse/unstructured.
+- **Pembayaran**: Midtrans / Xendit (Indonesia).
+- **Monorepo**: Turborepo — `apps/web`, `apps/api`, `apps/mobile`, `packages/shared` (tipe + Zod + API client).
+- Detail lama & milestone mobile: `docs/RENCANA-IMPLEMENTASI.md`. Rencana web: `docs/RENCANA-WEB.md`.
+
+## Status project
+- **W0 + W1(UI) SELESAI (2026-07-08, sesi ke-2)**: Turborepo (pnpm) berjalan. `packages/shared` (tipe+Zod+ApiClient), `apps/api` (NestJS: /health, /me, JwtAuthGuard Logto+stub; Prisma schema sbg dokumen belum di-wire), `apps/web` (Next.js 15 + Tailwind, tema gelap/oranye). **UI login clone**: `/` entry, `/masuk`, `/daftar`, `/consent`, `/app` — semua render 200, flow stub jalan (entry→consent→app). Typecheck ketiga paket lolos.
+- **Toolchain**: pnpm via corepack butuh `COREPACK_HOME="$HOME/.cache/corepack"` (Program Files tak bisa ditulis). Node 20.
+- **Belum di-wire (nunggu kredensial user)**: Logto (mode auth masih `stub`, ganti ke `logto` + isi env), Supabase (DATABASE_URL + Storage), Prisma generate/migrate, AI keys.
+- Rencana web: `docs/RENCANA-WEB.md`. Rencana mobile (nanti): `docs/RENCANA-IMPLEMENTASI.md`.
+
+## Cara menjalankan (dev)
+- Install: `COREPACK_HOME="$HOME/.cache/corepack" corepack pnpm@9.15.0 install`
+- Web: `pnpm dev:web` (port 3000) · API: `pnpm dev:api` (port 4000). Semua via turbo.
+- Mode auth diatur `NEXT_PUBLIC_AUTH_MODE` (default `stub`).
+
+## Aturan kerja AI (permintaan user)
+1. **Jangan buka ulang screenshot** `docs/ss/` — semua sudah tercatat di `docs/ai-memory/app-spec.md` & `design-system.md`. Cukup baca folder ini.
+2. **Selalu simpan pemahaman/keputusan baru** ke `docs/ai-memory/` (bukan hanya memory pribadi Claude), supaya PC lain dapat konteks yang sama.
+3. **Sebelum setiap `git push`**: sinkronkan `docs/ai-memory/` dengan pemahaman terbaru dan ikutkan dalam commit. *(Catatan: agar otomatis penuh, pasang git pre-push hook saat repo sudah di-init — belum dilakukan.)*
+4. **Jangan membuat/mengeksekusi kode app sampai user menyetujui.**
+
+## Perubahan strategi (2026-07-08, sesi ke-2)
+- User memisah screenshot: `docs/ss/app/` (mobile) & `docs/ss/web/` (web).
+- **Urutan pengerjaan: WEB DULU**, lalu mobile (Expo). Alasan: web lebih matang/lengkap di screenshot.
+- **Wajib: API backend BERSAMA** dipakai web & mobile dari awal (jangan logika di client). Database & konsumsi AI 3rd-party dirancang dari awal.
+- Auth = **OIDC provider terpisah** di `auth.pelajarin.ai` (bukti: account portal "Your applications", consent OIDC). Kemungkinan **Logto**. Ini menggeser rencana "Supabase Auth" → auth kemungkinan pakai Logto/OIDC; Supabase/Postgres tetap bisa jadi DB. **Perlu disepakati** (lihat pertanyaan tertunda).
+- Detail: `web-spec.md`, `onboarding-spec.md`, `login-flow.md`.
+
+## Tugas aktif: Clone halaman Login (fitur pertama)
+- Detail UI di `login-flow.md`. SS #1 = layar native (dark) yang kita bangun; SS #2 & #3 = halaman web auth server (`auth.pelajarin.ai`) di browser.
+- **Keputusan tertunda (perlu persetujuan user sebelum eksekusi):**
+  1. Arsitektur auth: (A) layar **native Expo** dark + **Supabase Auth** [rekomendasi, cepat & sesuai stack] vs (B) replikasi persis **hosted OIDC** (Better Auth/Logto di auth.pelajarin.ai) dengan halaman consent putih.
+  2. Scope tahap pertama: **UI-only** (layar statis dulu, belum ada auth nyata) vs **fully-wired** (langsung tersambung Supabase — butuh project Supabase + kredensial Google OAuth).
+
+## Aset/akun yang masih ditunggu dari user
+- Logo & warna brand resmi (konfirmasi hex oranye), font.
+- Akun: Supabase, Anthropic, Groq, Midtrans/Xendit, Google/Discord OAuth, Play/App Store developer.
+- Konfirmasi domain: `pelajarin.ai`, `auth.pelajarin.ai`.

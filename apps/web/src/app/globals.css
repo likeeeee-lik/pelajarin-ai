@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Poppins", "Nunito Sans", system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ink-900 text-white antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Glow dekoratif ala splash/onboarding (maroon kiri, ungu kanan). */
+.bg-aurora {
+  background:
+    radial-gradient(60% 50% at 8% 40%, rgba(120, 53, 30, 0.55) 0%, transparent 60%),
+    radial-gradient(55% 45% at 92% 75%, rgba(76, 45, 120, 0.45) 0%, transparent 60%),
+    #0b0f1a;
+}
+
+@layer components {
+  .input-field {
+    @apply w-full rounded-2xl border border-ink-500 bg-ink-700/60 px-4 py-3.5
+      text-white placeholder:text-muted/70 outline-none transition
+      focus:border-brand focus:ring-2 focus:ring-brand/30;
+  }
+  .card {
+    @apply rounded-xl2 border border-ink-500/70 bg-ink-600/60 backdrop-blur;
+  }
+}
