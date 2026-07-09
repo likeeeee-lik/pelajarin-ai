@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma, type ExamType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
-import type { PredictedQuestion } from "../ai/ai.types";
+import type { PredictedQuestion, Tingkat } from "../ai/ai.types";
 import { IngestionService } from "../ingestion/ingestion.service";
 import { StorageProvider } from "../storage/storage-provider";
 import type { AuthUser } from "../auth/jwt.types";
@@ -144,6 +144,7 @@ export class PredictionsService {
     p: { judul: string; tipe: ExamType; subjectId?: string; sourceText: string; sourceFiles: SourceFileMeta[] },
   ): Promise<PredictionView> {
     const res = await this.ai.predictExam({ judul: p.judul, tipe: p.tipe, sourceText: p.sourceText });
+    const questions = this.normalizeQuestions(res.questions);
     const pred = await this.prisma.examPrediction.create({
       data: {
         userId: user.sub,
@@ -151,7 +152,7 @@ export class PredictionsService {
         judul: p.judul.trim() || "Prediksi Soal",
         tipe: p.tipe,
         sourceFiles: p.sourceFiles as unknown as Prisma.InputJsonValue,
-        prediksiJson: { questions: res.questions } as unknown as Prisma.InputJsonValue,
+        prediksiJson: { questions } as unknown as Prisma.InputJsonValue,
       },
     });
     let mapel: string | null = null;
@@ -160,6 +161,27 @@ export class PredictionsService {
       mapel = s?.nama ?? null;
     }
     return this.toView(pred, mapel);
+  }
+
+  /** Bersihkan output AI apa pun agar aman dirender (guard provider nyata). */
+  private normalizeQuestions(raw: unknown): PredictedQuestion[] {
+    if (!Array.isArray(raw)) return [];
+    const valid: Tingkat[] = ["mudah", "sedang", "sulit"];
+    return raw
+      .slice(0, 12)
+      .map((q): PredictedQuestion => {
+        const item = (q ?? {}) as Record<string, unknown>;
+        const opsi = Array.isArray(item.opsi) ? item.opsi.map((o) => String(o)).filter((o) => o.trim()).slice(0, 6) : undefined;
+        return {
+          pertanyaan: String(item.pertanyaan ?? "").trim(),
+          tingkat: valid.includes(item.tingkat as Tingkat) ? (item.tingkat as Tingkat) : "sedang",
+          topik: String(item.topik ?? "Umum").trim() || "Umum",
+          opsi: opsi && opsi.length ? opsi : undefined,
+          jawaban: item.jawaban != null ? String(item.jawaban) : undefined,
+          pembahasan: item.pembahasan != null ? String(item.pembahasan) : undefined,
+        };
+      })
+      .filter((q) => q.pertanyaan.length > 0);
   }
 
   private toView(

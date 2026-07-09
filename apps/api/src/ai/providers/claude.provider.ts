@@ -42,14 +42,17 @@ export class ClaudeAiProvider extends AiProvider {
   private readonly logger = new Logger(ClaudeAiProvider.name);
   private readonly client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? "" });
   private readonly model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
+  // Prediksi ujian pakai model lebih kuat (default Opus); bisa dioverride/di-hemat
+  // lewat ANTHROPIC_MODEL_PREDICT.
+  private readonly predictModel = process.env.ANTHROPIC_MODEL_PREDICT ?? "claude-opus-4-8";
 
   private styleLine(c: GenConfig): string {
     return `Tulis dalam ${BAHASA[c.bahasa] ?? "Bahasa Indonesia"}, gaya ${GAYA[c.gayaPenulisan] ?? "ramah & santai"}, kedalaman "${c.modeBelajar}".`;
   }
 
-  private async text(system: string, user: string): Promise<string> {
+  private async text(system: string, user: string, model = this.model): Promise<string> {
     const msg = await this.client.messages.create({
-      model: this.model,
+      model,
       max_tokens: 4096,
       system,
       messages: [{ role: "user", content: user }],
@@ -57,13 +60,29 @@ export class ClaudeAiProvider extends AiProvider {
     return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
   }
 
-  private async json<T>(system: string, user: string): Promise<T> {
+  /** Ekstrak objek JSON dari balasan model (buang fence / prosa pembungkus). */
+  private extractJson(raw: string): string {
+    let s = raw.trim();
+    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fence) s = fence[1].trim();
+    const start = s.indexOf("{");
+    const end = s.lastIndexOf("}");
+    if (start >= 0 && end > start) s = s.slice(start, end + 1);
+    return s;
+  }
+
+  private async json<T>(system: string, user: string, model = this.model): Promise<T> {
     const raw = await this.text(
       `${system}\nBalas HANYA JSON valid tanpa penjelasan, tanpa markdown fence.`,
       user,
+      model,
     );
-    const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
-    return JSON.parse(cleaned) as T;
+    try {
+      return JSON.parse(this.extractJson(raw)) as T;
+    } catch (e) {
+      this.logger.error(`Gagal parse JSON dari AI: ${(e as Error).message}. Cuplikan: ${raw.slice(0, 200)}`);
+      throw e;
+    }
   }
 
   generateOutline(input: OutlineInput): Promise<OutlineResult> {
@@ -127,6 +146,7 @@ export class ClaudeAiProvider extends AiProvider {
         `Setiap soal wajib punya 4 opsi, satu jawaban benar (harus sama persis dengan salah satu opsi), dan pembahasan singkat. ` +
         `Soal sumber:\n"""${input.sourceText.slice(0, 8000)}"""\n` +
         `Format: {"questions":[{"pertanyaan":"...","tingkat":"mudah|sedang|sulit","topik":"...","opsi":["a","b","c","d"],"jawaban":"...","pembahasan":"..."}]}`,
+      this.predictModel,
     );
   }
 }
