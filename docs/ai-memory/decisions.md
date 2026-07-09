@@ -138,7 +138,9 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 - Prisma: model **MaterialFile** (materialId, name, path, size, mime) + relasi `Material.files`. db push.
 - Wiring: `MaterialsService.createFromUpload` → setelah ingest, jika `storage.enabled` → upload bytes ke `{sub}/{materialId}/{ts}_{name}` + buat MaterialFile (gagal upload tak batalkan materi). `get()` include `files`. `fileUrl(user,materialId,fileId)` → signed URL. Endpoint **GET `/materials/:id/files/:fileId/url`**.
 - Web: `Material.files: MaterialFile[]`, `materialsApi.fileUrl`. **Dokumen tab** kini daftar file + **Unduh** (signed url→window.open) + **Pratinjau PDF** (iframe signed url); fallback tampil rawText + ajakan isi service key.
-- **Verifikasi (tanpa key = disabled)**: log "Storage: disabled"; upload TXT → 6 bab, files:0, rawText ada, tanpa error. **Aktivasi nyata: user isi `SUPABASE_SERVICE_KEY`** → file tersimpan + preview/unduh jalan.
+- **Verifikasi (tanpa key = disabled)**: log "Storage: disabled"; upload TXT → 6 bab, files:0, rawText ada, tanpa error.
+- **AKTIF & TERVERIFIKASI LIVE (2026-07-09)**: user isi `SUPABASE_SERVICE_KEY` (format baru `sb_secret_...` = Secret key, bukan publishable). Log "Storage: supabase"; upload TXT → files:1, signed URL dibuat, download 200 + isi cocok. Bucket `materials` auto-dibuat.
+- **Fix penting**: `@supabase/supabase-js` butuh WebSocket global (Realtime) yg tak ada di Node 20 → error "native WebSocket not found". Solusi: install `ws` + polyfill `globalThis.WebSocket = ws` di atas `supabase-storage.provider.ts`. Note: nilai `SUPABASE_SERVICE_KEY` = Secret key baru Supabase (bukan JWT `eyJ`), tetap valid untuk supabase-js.
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 

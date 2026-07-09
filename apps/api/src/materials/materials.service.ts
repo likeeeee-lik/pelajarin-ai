@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
 import type { GenConfig } from "../ai/ai.types";
@@ -58,6 +58,7 @@ export class MaterialsService {
         return this.get(user, material.id);
       } catch (e) {
         // penyimpanan gagal tidak membatalkan materi (rawText sudah terekstrak)
+        new Logger("MaterialsService").warn(`Upload storage gagal: ${(e as Error).message}`);
         return material;
       }
     }

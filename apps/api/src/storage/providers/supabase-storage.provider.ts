@@ -1,6 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import { StorageProvider } from "../storage-provider";
+
+// supabase-js memuat Realtime yang butuh WebSocket global (tak ada di Node 20).
+// Kita hanya pakai Storage; polyfill agar createClient tidak error.
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket === "undefined") {
+  (globalThis as { WebSocket?: unknown }).WebSocket = WebSocket;
+}
 
 /** Penyimpanan file di Supabase Storage (bucket privat + signed URL). */
 @Injectable()
