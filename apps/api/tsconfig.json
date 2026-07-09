@@ -13,7 +13,7 @@
     "sourceMap": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"]
+    "types": ["node", "express", "multer"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
 import type { GenConfig } from "../ai/ai.types";
 import type { AuthUser } from "../auth/jwt.types";
+import { IngestionService, type UploadedFile } from "../ingestion/ingestion.service";
 import type { CreateMaterialDto } from "./materials.dto";
 
 @Injectable()
@@ -10,6 +11,7 @@ export class MaterialsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ai: AiProvider,
+    private readonly ingestion: IngestionService,
   ) {}
 
   /** Pastikan profil user ada (FK) — dev/stub bisa memanggil sebelum /me. */
@@ -34,9 +36,21 @@ export class MaterialsService {
   }
 
   /** Buat materi + (untuk sumber non-manual) susun bab via AI, lalu status ready. */
+  /** Buat materi dari unggahan file (parse/transkrip → rawText). */
+  async createFromUpload(user: AuthUser, file: UploadedFile | undefined, dto: CreateMaterialDto) {
+    const rawText = file ? await this.ingestion.extractFromUpload(file, dto.tipe) : "";
+    return this.create(user, { ...dto, rawText: rawText || dto.rawText });
+  }
+
   async create(user: AuthUser, dto: CreateMaterialDto) {
     await this.ensureUser(user);
     const config = this.configOf(dto);
+
+    // Ingestion untuk YouTube (transkrip caption).
+    let rawText = dto.rawText || null;
+    if (dto.tipe === "youtube" && dto.sourceUrl && !rawText) {
+      rawText = (await this.ingestion.extractFromYoutube(dto.sourceUrl)) || null;
+    }
 
     const material = await this.prisma.material.create({
       data: {
@@ -45,7 +59,7 @@ export class MaterialsService {
         tipe: dto.tipe,
         subjectId: dto.subjectId || null,
         sourceUrl: dto.sourceUrl || null,
-        rawText: dto.rawText || null,
+        rawText,
         modeBelajar: config.modeBelajar,
         gayaPenulisan: config.gayaPenulisan,
         bahasa: config.bahasa,
@@ -57,7 +71,7 @@ export class MaterialsService {
     if (dto.tipe !== "note") {
       const outline = await this.ai.generateOutline({
         judul: material.judul,
-        rawText: dto.rawText || material.judul,
+        rawText: rawText || material.judul,
         config,
       });
       await this.prisma.chapter.createMany({

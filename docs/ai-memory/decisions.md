@@ -123,7 +123,17 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 - Shared `chapter-picker.tsx`. Semua via React Query + endpoint API yang sudah ada.
 - Diwire di `note-workspace.tsx` (ganti PlaceholderTab). Verifikasi: workspace 200; endpoint mindmap/flashcards/quiz/chat OK; typecheck web+api lolos.
 
-**Belum:** ingestion nyata (parse file/transkrip audio/video/youtube — kini `rawText`=judul/filename saja); Bagikan/Ekspor PDF (tombol masih stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap (kini textarea Markdown+preview); gating Pro nyata (kini badge visual saja). `ANTHROPIC_API_KEY` kosong (mock) — set AI_PROVIDER=claude + key utk AI asli.
+## INGESTION NYATA (2026-07-09) — TERVERIFIKASI
+`apps/api/src/ingestion/` (OOP, abstraksi seperti AI):
+- **File parsing lokal (tanpa API key)**: PDF (`pdf-parse`), DOCX (`mammoth`), TXT/MD/CSV/JSON (utf8). PPT/XLSX belum didukung → fallback "".
+- **YouTube**: `youtube-transcript` (transkrip caption, tanpa key).
+- **Audio/Video**: `TranscriptionProvider` (abstract) → `GroqTranscriptionProvider` (Groq Whisper `whisper-large-v3`, OpenAI-compatible endpoint via fetch+FormData) / `MockTranscriptionProvider`; dipilih di `ingestion.module.ts` via `GROQ_API_KEY` (ada→groq, else mock).
+- `IngestionService.extractFromUpload(file, tipe)` (parse/transkrip) & `extractFromYoutube(url)`.
+- **Wiring**: `MaterialsModule` import `IngestionModule`; `MaterialsService` inject `IngestionService` → `create()` ingest YouTube transcript; **`createFromUpload()`** + endpoint **`POST /materials/upload`** (multipart, `FileInterceptor`, limit 300MB) parse/transkrip → `rawText` → outline AI.
+- **Web**: `create-material-modal` kini simpan `File` asli → untuk file/audio/video kirim **FormData** ke `/materials/upload` (`materialsApi.upload`); YouTube/note tetap JSON. `apiFetch` skip content-type utk FormData.
+- tsconfig API `types:["node","express","multer"]` (untuk `Express.Multer.File`). Uji: upload TXT nyata → rawText terekstrak dari file → 6 bab. Env: `GROQ_MODEL` opsional (default whisper-large-v3).
+
+**Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser; Storage file asli (belum disimpan, hanya diparse). `ANTHROPIC_API_KEY`/`GROQ_API_KEY` kosong (mock) — isi + set provider utk AI/transkrip asli.
 
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:

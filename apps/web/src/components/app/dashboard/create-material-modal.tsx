@@ -37,7 +37,7 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
   const [judul, setJudul] = useState("");
   const [konten, setKonten] = useState("");
   const [url, setUrl] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [subjectId, setSubjectId] = useState("");
   const [mode, setMode] = useState("standar");
   const [gaya, setGaya] = useState("santai");
@@ -47,20 +47,32 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
   const isFile = source === "file" || source === "audio" || source === "video";
   const canCreate =
     judul.trim().length > 0 &&
-    (source === "note" ? true : source === "youtube" ? url.trim().length > 0 : fileName.length > 0);
+    (source === "note" ? true : source === "youtube" ? url.trim().length > 0 : file != null);
 
   const create = useMutation({
-    mutationFn: () =>
-      materialsApi.create({
+    mutationFn: () => {
+      if (isFile) {
+        const form = new FormData();
+        form.append("file", file as File);
+        form.append("judul", judul.trim());
+        form.append("tipe", source);
+        if (subjectId) form.append("subjectId", subjectId);
+        form.append("modeBelajar", mode);
+        form.append("gayaPenulisan", gaya);
+        form.append("bahasa", bahasa);
+        return materialsApi.upload(form);
+      }
+      return materialsApi.create({
         judul: judul.trim(),
         tipe: source,
         subjectId: subjectId || undefined,
         sourceUrl: source === "youtube" ? url.trim() : undefined,
-        rawText: source === "note" ? konten.trim() : fileName || undefined,
+        rawText: source === "note" ? konten.trim() : undefined,
         modeBelajar: mode,
         gayaPenulisan: gaya,
         bahasa,
-      }),
+      });
+    },
     onSuccess: (m) => {
       qc.invalidateQueries({ queryKey: ["materials"] });
       onClose();
@@ -102,10 +114,10 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
           ) : (
             <Field label="File">
               <button type="button" onClick={() => fileRef.current?.click()} className="w-full rounded-2xl border-2 border-dashed border-ink-500 bg-ink-700/30 px-4 py-6 text-center text-sm text-muted transition hover:border-brand/60">
-                {fileName ? <span className="text-white">{fileName}</span> : "Tap untuk memilih file"}
+                {file ? <span className="text-white">{file.name}</span> : "Tap untuk memilih file"}
                 <span className="mt-1 block text-xs">{meta?.desc}</span>
               </button>
-              <input ref={fileRef} type="file" className="hidden" onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")} />
+              <input ref={fileRef} type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             </Field>
           )}
 

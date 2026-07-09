@@ -19,10 +19,12 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
   const res = await fetch(BASE + path, {
     ...init,
     headers: {
-      "content-type": "application/json",
+      // FormData: biarkan browser set multipart boundary sendiri.
+      ...(isForm ? {} : { "content-type": "application/json" }),
       authorization: `Bearer ${authToken()}`,
       ...(init.headers ?? {}),
     },
