@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
 import type { GenConfig } from "../ai/ai.types";
@@ -63,6 +64,37 @@ export class MaterialsService {
       }
     }
     return material;
+  }
+
+  /** Aktifkan/nonaktifkan berbagi publik; buat slug sekali. */
+  async setShare(user: AuthUser, id: string, enable: boolean) {
+    const material = await this.get(user, id);
+    const slug = material.shareSlug ?? (enable ? randomUUID().replace(/-/g, "").slice(0, 12) : null);
+    const updated = await this.prisma.material.update({
+      where: { id },
+      data: { sharePublic: enable, shareSlug: slug },
+    });
+    return { sharePublic: updated.sharePublic, shareSlug: updated.shareSlug };
+  }
+
+  /** Ambil catatan publik via slug (tanpa auth). */
+  async getPublic(slug: string) {
+    const m = await this.prisma.material.findFirst({
+      where: { shareSlug: slug, sharePublic: true },
+      include: {
+        subject: { select: { nama: true } },
+        chapters: { orderBy: { urutan: "asc" } },
+      },
+    });
+    if (!m) throw new NotFoundException("Catatan tidak ditemukan atau tidak dibagikan");
+    return {
+      judul: m.judul,
+      subject: m.subject,
+      createdAt: m.createdAt,
+      chapters: m.chapters
+        .filter((c) => (c.kontenMd?.trim().length ?? 0) > 0)
+        .map((c) => ({ urutan: c.urutan, judul: c.judul, kontenMd: c.kontenMd })),
+    };
   }
 
   /** Signed URL untuk unduh/pratinjau file (download/preview). */

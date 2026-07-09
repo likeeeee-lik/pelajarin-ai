@@ -144,6 +144,11 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
+## BAGIKAN & EKSPOR PDF (2026-07-09) — TERVERIFIKASI
+- **Bagikan** (pakai field `Material.sharePublic`/`shareSlug`): API `POST /materials/:id/share {enable}` (`MaterialsService.setShare`, slug via `randomUUID` sekali) + **`PublicController` GET `/public/materials/:slug` TANPA auth** (`getPublic` → judul/subjek/bab berisi). Web: `materialsApi.share`, `publicApi.get`; `ShareModal` (status Privat/Publik + Aktifkan/Nonaktifkan + link `${origin}/publik/{slug}` + Salin). Halaman publik read-only **`app/publik/[slug]/page.tsx`** (react-markdown). Uji: enable→slug→public 200; disable→404.
+- **Ekspor PDF**: `ExportPdfModal` — pilih bab (checkbox, Pilih/Batal Semua) → `marked` (md→html) → `window.open`+`print()` (print-to-PDF, zero-server). Hanya bab berisi.
+- Tombol header workspace **Bagikan**/**Ekspor PDF** kini fungsional (buka modal masing-masing). Dep baru: `marked` (web).
+
 ## FORM UPLOAD DISESUAIKAN REFERENSI (2026-07-09)
 `create-material-modal.tsx` dirombak agar cocok `note-workspace-spec.md` §A (screenshot userDashboard 1–4,6,9,12,16):
 - **File/Audio/Video = 2 langkah**: (1) **Dropzone** drag&drop + klik, teks "Drag & drop file di sini, atau klik untuk memilih" + format per sumber (file: PDF/Word/PPT/Excel/Text 100MB; audio: MP3/WAV 300MB; video: MP4/MOV 500MB) + kartu file terpilih (nama+ukuran "X.XX MB"+X). (2) **Config**: Mata Pelajaran/Kuliah (**SubjectCombobox** searchable + "Buat 'X'" + link Kelola), **Mode Belajar** 3 kartu (Kilat/Standar/Lengkap + ikon+desc), **Gaya Penulisan** (Serius&Formal/Ramah&Santai/Menyenangkan&Kreatif/Akademis&Ilmiah), **Bahasa Generasi** (🇮🇩/🇺🇸/🇸🇦/🇨🇳). Tombol Batal/Kembali/Lanjutkan.

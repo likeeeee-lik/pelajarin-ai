@@ -52,6 +52,11 @@ export class MaterialsController {
     return this.materials.fileUrl(user, id, fileId);
   }
 
+  @Post(":id/share")
+  share(@CurrentUser() user: AuthUser, @Param("id") id: string, @Body() body: { enable: boolean }) {
+    return this.materials.setShare(user, id, body.enable);
+  }
+
   @Delete(":id")
   remove(@CurrentUser() user: AuthUser, @Param("id") id: string) {
     return this.materials.remove(user, id);

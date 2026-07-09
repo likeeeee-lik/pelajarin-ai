@@ -108,6 +108,13 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface PublicMaterial {
+  judul: string;
+  subject: { nama: string } | null;
+  createdAt: string;
+  chapters: { urutan: number; judul: string; kontenMd: string | null }[];
+}
+
 export interface CreateMaterialInput {
   judul: string;
   tipe: MaterialType;

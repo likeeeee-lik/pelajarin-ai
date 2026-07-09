@@ -29,7 +29,16 @@ export const materialsApi = {
   upload: (form: FormData) => apiFetch<Material>("/materials/upload", { method: "POST", body: form }),
   fileUrl: (materialId: string, fileId: string) =>
     apiFetch<{ url: string | null; name: string; mime: string }>(`/materials/${materialId}/files/${fileId}/url`),
+  share: (id: string, enable: boolean) =>
+    apiFetch<{ sharePublic: boolean; shareSlug: string | null }>(`/materials/${id}/share`, {
+      method: "POST",
+      body: JSON.stringify({ enable }),
+    }),
   remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
+};
+
+export const publicApi = {
+  get: (slug: string) => apiFetch<import("./types").PublicMaterial>(`/public/materials/${slug}`),
 };
 
 export const chaptersApi = {

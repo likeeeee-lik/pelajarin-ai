@@ -12,9 +12,13 @@ import { FlashcardsTab } from "./tabs/flashcards-tab";
 import { KuisTab } from "./tabs/kuis-tab";
 import { ChatTab } from "./tabs/chat-tab";
 import { DokumenTab } from "./tabs/dokumen-tab";
+import { ShareModal } from "./share-modal";
+import { ExportPdfModal } from "./export-pdf-modal";
 
 export function NoteWorkspace({ id }: { id: string }) {
   const [tab, setTab] = useState<WorkspaceTab>("catatan");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const material = useQuery({ queryKey: ["material", id], queryFn: () => materialsApi.get(id) });
 
   return (
@@ -43,10 +47,10 @@ export function NoteWorkspace({ id }: { id: string }) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="button" title="Segera" className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold text-muted transition hover:text-white">
+                <button type="button" onClick={() => setShareOpen(true)} className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-600">
                   <Share2 className="h-4 w-4" /> Bagikan
                 </button>
-                <button type="button" title="Segera" className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold text-muted transition hover:text-white">
+                <button type="button" onClick={() => setExportOpen(true)} className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-600">
                   <Download className="h-4 w-4" /> Ekspor PDF
                 </button>
               </div>
@@ -58,6 +62,9 @@ export function NoteWorkspace({ id }: { id: string }) {
             {tab === "kuis" ? <KuisTab material={material.data} /> : null}
             {tab === "dokumen" ? <DokumenTab material={material.data} /> : null}
             {tab === "chat" ? <ChatTab material={material.data} /> : null}
+
+            {shareOpen ? <ShareModal materialId={id} onClose={() => setShareOpen(false)} /> : null}
+            {exportOpen ? <ExportPdfModal material={material.data} onClose={() => setExportOpen(false)} /> : null}
           </>
         )}
       </main>
