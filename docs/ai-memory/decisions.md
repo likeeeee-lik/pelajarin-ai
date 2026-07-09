@@ -94,7 +94,16 @@ User tambah 55 screenshot detail (`docs/ss/web/userDashboard/`) → fitur inti b
 - `chapters/` — POST `/chapters` (tambah bab manual) · POST `/chapters/:id/generate` (isi via AI) · PATCH `/chapters/:id` (autosave editor) · DELETE.
 - Guard JwtAuthGuard (stub demo-user). Uji: buat materi→6 bab→generate bab-1 markdown OK; tersimpan di Supabase.
 
-**Belum (slice berikutnya):** endpoint mindmap/flashcards/quiz/chat/predictions (AiProvider sudah punya methodnya), ingestion nyata (parse file/transkrip), lalu **frontend Note Workspace** (6 tab, editor, timer Fokus, gating Pro, Bagikan/Ekspor). Frontend masih pakai localStorage store — perlu migrasi ke API pada slice frontend.
+**BACKEND AI KOMPLET (2026-07-09)** — semua endpoint TERVERIFIKASI (mock, live Supabase):
+- `mindmap/` — GET `/materials/:id/mindmap` · POST `/materials/:id/mindmap/generate` (upsert MindMap.dataJson).
+- `flashcards/` — GET `/materials/:id/flashcards` · POST `/materials/:id/flashcards/generate` (body count, chapterIds → regen set).
+- `quizzes/` — GET `/materials/:id/quizzes` · POST `/materials/:id/quizzes/generate` (count, types[], chapterIds → Quiz.soalJson) · GET `/quizzes/:quizId`.
+- `chat/` — GET/POST `/materials/:id/chat/sessions` · GET `/chat/sessions/:id/messages` · POST `/chat/sessions/:id/messages` (RAG: konteks dari bab terpilih + history, simpan user+assistant).
+- `predictions/` — GET `/predictions` · GET `/predictions/:id` · POST `/predictions` (AI predictExam → prediksiJson).
+- Helper `MaterialsService.getContext(user, materialId, chapterIds?)` = gabung isi bab → konteks AI (dipakai mindmap/flashcards/quiz/chat). Modul non-materials import `MaterialsModule`.
+- Json fields (mindmap/quiz/prediction) di-cast `as unknown as Prisma.InputJsonValue`.
+
+**Belum (slice berikutnya):** ingestion nyata (parse file/transkrip audio/video/youtube), lalu **frontend Note Workspace** (6 tab, editor rich-text, timer Fokus, gating Pro, Bagikan/Ekspor PDF) + migrasi dashboard localStorage→API. `ANTHROPIC_API_KEY` masih kosong (mock aktif) — set AI_PROVIDER=claude + key untuk AI asli.
 
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:

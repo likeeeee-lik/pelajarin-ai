@@ -103,4 +103,26 @@ export class MaterialsService {
     await this.prisma.material.delete({ where: { id } });
     return { ok: true };
   }
+
+  /**
+   * Konteks teks untuk fitur AI (mindmap/flashcards/quiz/chat).
+   * Gabungkan isi bab terpilih; fallback ke rawText/judul.
+   */
+  async getContext(user: AuthUser, materialId: string, chapterIds?: string[]) {
+    const material = await this.get(user, materialId);
+    const selected =
+      chapterIds && chapterIds.length
+        ? material.chapters.filter((c) => chapterIds.includes(c.id))
+        : material.chapters;
+    const withContent = selected.filter((c) => c.kontenMd && c.kontenMd.trim().length > 0);
+    const context = withContent.length
+      ? withContent.map((c) => `## ${c.judul}\n${c.kontenMd}`).join("\n\n")
+      : material.rawText || material.judul;
+    return {
+      material,
+      judul: material.judul,
+      context,
+      chapterTitles: material.chapters.map((c) => c.judul),
+    };
+  }
 }
