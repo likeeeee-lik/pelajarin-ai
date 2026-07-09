@@ -109,12 +109,145 @@ export class MockAiProvider extends AiProvider {
   }
 
   async predictExam(input: PredictExamInput): Promise<PredictExamResult> {
-    return {
-      questions: [
-        { pertanyaan: `Prediksi soal ${input.tipe} #1 untuk ${input.judul}`, tingkat: "mudah", topik: "Topik A", opsi: ["A", "B", "C", "D"], jawaban: "A" },
-        { pertanyaan: `Prediksi soal ${input.tipe} #2`, tingkat: "sedang", topik: "Topik B", opsi: ["A", "B", "C", "D"], jawaban: "C" },
-        { pertanyaan: `Prediksi soal ${input.tipe} #3`, tingkat: "sulit", topik: "Topik C" },
-      ],
-    };
+    // Pilih bank soal contoh dari kata kunci judul/sumber. (Konten contoh —
+    // hasil analisis nyata muncul saat AI_PROVIDER=claude.)
+    const hay = `${input.judul} ${input.sourceText}`.toLowerCase();
+    const bank = /(fisika|ipa|sains|kimia|biologi)/.test(hay)
+      ? PREDICT_FISIKA
+      : /(matematika|mtk|kalkulus|aljabar|statistik)/.test(hay)
+        ? PREDICT_MATEMATIKA
+        : PREDICT_UMUM;
+    return { questions: bank.slice(0, 5) };
   }
 }
+
+const PREDICT_FISIKA: PredictExamResult["questions"] = [
+  {
+    pertanyaan:
+      "Sebuah bola dilempar horizontal dari ketinggian 20 m dengan kecepatan awal 15 m/s (g = 9,8 m/s², tanpa hambatan udara). Berapa jarak horizontal yang ditempuh sebelum menyentuh tanah?",
+    tingkat: "mudah",
+    topik: "Kinematika Gerak Horizontal",
+    opsi: ["28 meter", "30 meter", "32 meter", "34 meter"],
+    jawaban: "30 meter",
+    pembahasan: "t = √(2h/g) = √(40/9,8) ≈ 2,02 s; x = v₀·t = 15 × 2,02 ≈ 30 m.",
+  },
+  {
+    pertanyaan: "Benda bermassa 2 kg bergerak dengan kecepatan 10 m/s. Berapa energi kinetiknya?",
+    tingkat: "sedang",
+    topik: "Energi Kinetik",
+    opsi: ["50 J", "100 J", "200 J", "400 J"],
+    jawaban: "100 J",
+    pembahasan: "Ek = ½mv² = ½ × 2 × 10² = 100 J.",
+  },
+  {
+    pertanyaan: "Gaya 10 N bekerja pada benda bermassa 2 kg. Berapa percepatannya?",
+    tingkat: "mudah",
+    topik: "Hukum Newton II",
+    opsi: ["2 m/s²", "5 m/s²", "10 m/s²", "20 m/s²"],
+    jawaban: "5 m/s²",
+    pembahasan: "a = F/m = 10 / 2 = 5 m/s².",
+  },
+  {
+    pertanyaan: "Mobil dari keadaan diam dipercepat 2 m/s² selama 5 s. Berapa kecepatan akhirnya?",
+    tingkat: "sedang",
+    topik: "Gerak Lurus Berubah Beraturan",
+    opsi: ["5 m/s", "10 m/s", "15 m/s", "20 m/s"],
+    jawaban: "10 m/s",
+    pembahasan: "v = v₀ + at = 0 + 2 × 5 = 10 m/s.",
+  },
+  {
+    pertanyaan: "Benda bermassa 5 kg di permukaan bumi (g = 9,8 m/s²). Berapa gaya beratnya?",
+    tingkat: "sulit",
+    topik: "Gaya Berat",
+    opsi: ["5 N", "49 N", "50 N", "98 N"],
+    jawaban: "49 N",
+    pembahasan: "w = m·g = 5 × 9,8 = 49 N.",
+  },
+];
+
+const PREDICT_MATEMATIKA: PredictExamResult["questions"] = [
+  {
+    pertanyaan: "Tentukan akar-akar persamaan x² − 5x + 6 = 0.",
+    tingkat: "sedang",
+    topik: "Persamaan Kuadrat",
+    opsi: ["2 dan 3", "1 dan 6", "−2 dan −3", "2 dan −3"],
+    jawaban: "2 dan 3",
+    pembahasan: "(x − 2)(x − 3) = 0 → x = 2 atau x = 3.",
+  },
+  {
+    pertanyaan: "Jika f(x) = 3x², maka f′(x) adalah …",
+    tingkat: "sedang",
+    topik: "Turunan Fungsi",
+    opsi: ["3x", "6x", "6x²", "9x"],
+    jawaban: "6x",
+    pembahasan: "f′(x) = 2 × 3 × x^(2−1) = 6x.",
+  },
+  {
+    pertanyaan: "Diketahui x + y = 10 dan x − y = 2. Nilai x dan y adalah …",
+    tingkat: "mudah",
+    topik: "Sistem Persamaan Linear",
+    opsi: ["x = 6, y = 4", "x = 4, y = 6", "x = 5, y = 5", "x = 8, y = 2"],
+    jawaban: "x = 6, y = 4",
+    pembahasan: "2x = 12 → x = 6, maka y = 4.",
+  },
+  {
+    pertanyaan: "Barisan aritmetika U₁ = 3, beda 4. Berapa suku ke-5?",
+    tingkat: "mudah",
+    topik: "Barisan Aritmetika",
+    opsi: ["15", "19", "23", "27"],
+    jawaban: "19",
+    pembahasan: "Uₙ = U₁ + (n−1)b = 3 + 4×4 = 19.",
+  },
+  {
+    pertanyaan: "Sebuah dadu dilempar sekali. Berapa peluang muncul angka genap?",
+    tingkat: "sedang",
+    topik: "Peluang",
+    opsi: ["1/6", "1/3", "1/2", "2/3"],
+    jawaban: "1/2",
+    pembahasan: "Genap = {2,4,6} → 3/6 = 1/2.",
+  },
+];
+
+const PREDICT_UMUM: PredictExamResult["questions"] = [
+  {
+    pertanyaan: "Sinonim yang paling tepat untuk kata \"cerdas\" adalah …",
+    tingkat: "mudah",
+    topik: "Kosakata",
+    opsi: ["Pandai", "Malas", "Lambat", "Lupa"],
+    jawaban: "Pandai",
+    pembahasan: "\"Cerdas\" bersinonim dengan \"pandai\".",
+  },
+  {
+    pertanyaan: "Perhatikan deret: 2, 4, 8, 16, … Bilangan berikutnya adalah …",
+    tingkat: "sedang",
+    topik: "Pola Bilangan",
+    opsi: ["18", "24", "32", "64"],
+    jawaban: "32",
+    pembahasan: "Tiap suku dikali 2: 16 × 2 = 32.",
+  },
+  {
+    pertanyaan:
+      "\"Membaca setiap hari melatih otak dan memperluas kosakata.\" Ide pokok kalimat tersebut adalah …",
+    tingkat: "mudah",
+    topik: "Ide Pokok",
+    opsi: ["Manfaat membaca", "Cara menulis", "Jenis buku", "Waktu belajar"],
+    jawaban: "Manfaat membaca",
+    pembahasan: "Kalimat menyebut manfaat dari kegiatan membaca.",
+  },
+  {
+    pertanyaan: "Semua siswa memakai seragam. Budi seorang siswa. Maka …",
+    tingkat: "sedang",
+    topik: "Penalaran Logis",
+    opsi: ["Budi memakai seragam", "Budi tidak berseragam", "Budi bukan siswa", "Tidak dapat disimpulkan"],
+    jawaban: "Budi memakai seragam",
+    pembahasan: "Silogisme: semua siswa berseragam, Budi siswa → Budi berseragam.",
+  },
+  {
+    pertanyaan: "Hasil dari 15% × 200 adalah …",
+    tingkat: "sulit",
+    topik: "Aritmetika Dasar",
+    opsi: ["15", "20", "30", "45"],
+    jawaban: "30",
+    pembahasan: "0,15 × 200 = 30.",
+  },
+];

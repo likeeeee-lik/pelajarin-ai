@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Sparkles, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Plus, Sparkles, Target } from "lucide-react";
 import { CreatePredictionModal } from "@/components/app/latihan-soal/create-modal";
 import { PredictionCard } from "@/components/app/latihan-soal/prediction-card";
-import { addPrediction, usePredictions } from "@/lib/store";
+import { predictionsApi } from "@/lib/api/resources";
 
 export default function LatihanSoalPage() {
   const [open, setOpen] = useState(false);
-  const items = usePredictions();
+  const predictions = useQuery({ queryKey: ["predictions"], queryFn: predictionsApi.list });
+  const items = predictions.data ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,7 +33,11 @@ export default function LatihanSoalPage() {
         </button>
       </header>
 
-      {items.length === 0 ? (
+      {predictions.isLoading ? (
+        <div className="card grid place-items-center p-12 text-muted">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : items.length === 0 ? (
         <div className="card grid place-items-center p-12 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-full bg-brand/15 text-brand">
             <Sparkles className="h-8 w-8" />
@@ -57,15 +63,7 @@ export default function LatihanSoalPage() {
         </div>
       )}
 
-      {open ? (
-        <CreatePredictionModal
-          onClose={() => setOpen(false)}
-          onCreate={(p) => {
-            addPrediction({ judul: p.judul, mapel: p.mapel, tipe: p.tipe, fileCount: p.fileCount });
-            setOpen(false);
-          }}
-        />
-      ) : null}
+      {open ? <CreatePredictionModal onClose={() => setOpen(false)} /> : null}
     </div>
   );
 }

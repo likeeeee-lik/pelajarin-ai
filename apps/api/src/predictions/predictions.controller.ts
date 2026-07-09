@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FilesInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthUser } from "../auth/jwt.types";
@@ -22,5 +32,16 @@ export class PredictionsController {
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreatePredictionDto) {
     return this.predictions.create(user, dto);
+  }
+
+  /** Unggah soal-soal sumber (multi-file) → parse → analisis pola → prediksi. */
+  @Post("upload")
+  @UseInterceptors(FilesInterceptor("files", 10, { limits: { fileSize: 50 * 1024 * 1024 } }))
+  upload(
+    @CurrentUser() user: AuthUser,
+    @UploadedFiles() files: Array<Express.Multer.File> | undefined,
+    @Body() dto: CreatePredictionDto,
+  ) {
+    return this.predictions.createFromUpload(user, files ?? [], dto);
   }
 }

@@ -88,6 +88,7 @@ export interface PredictedQuestion {
   topik: string;
   opsi?: string[];
   jawaban?: string;
+  pembahasan?: string;
 }
 export interface PredictExamInput {
   judul: string;

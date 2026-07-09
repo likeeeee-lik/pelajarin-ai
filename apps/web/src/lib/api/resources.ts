@@ -4,6 +4,7 @@ import type {
   ChatMessage,
   ChatSession,
   CreateMaterialInput,
+  ExamPrediction,
   Flashcard,
   Material,
   MaterialSummary,
@@ -35,6 +36,13 @@ export const materialsApi = {
       body: JSON.stringify({ enable }),
     }),
   remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
+};
+
+export const predictionsApi = {
+  list: () => apiFetch<ExamPrediction[]>("/predictions"),
+  get: (id: string) => apiFetch<ExamPrediction>(`/predictions/${id}`),
+  /** form: files[], judul, tipe, subjectId */
+  upload: (form: FormData) => apiFetch<ExamPrediction>("/predictions/upload", { method: "POST", body: form }),
 };
 
 export const publicApi = {

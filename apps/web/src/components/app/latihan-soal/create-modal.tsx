@@ -1,30 +1,23 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dumbbell,
   FileCheck,
   HelpCircle,
   Info,
+  Loader2,
   Paperclip,
   School,
   Sparkles,
   X,
   type LucideIcon,
 } from "lucide-react";
-import { subjectsApi } from "@/lib/api/resources";
+import { predictionsApi } from "@/lib/api/resources";
+import type { ExamType } from "@/lib/api/types";
 import { SubjectCombobox } from "@/components/app/subject-combobox";
-
-export type ExamType = "uts" | "uas" | "kuis" | "latihan";
-
-export interface Prediction {
-  id: string;
-  judul: string;
-  mapel: string;
-  tipe: ExamType;
-  fileCount: number;
-}
 
 const TIPE: { value: ExamType; label: string; sub: string; icon: LucideIcon }[] = [
   { value: "uts", label: "UTS", sub: "Ujian Tengah Semester", icon: FileCheck },
@@ -33,23 +26,33 @@ const TIPE: { value: ExamType; label: string; sub: string; icon: LucideIcon }[] 
   { value: "latihan", label: "Latihan", sub: "Soal Latihan", icon: Dumbbell },
 ];
 
-export function CreatePredictionModal({
-  onClose,
-  onCreate,
-}: {
-  onClose: () => void;
-  onCreate: (p: Prediction) => void;
-}) {
+export function CreatePredictionModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const qc = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
   const [judul, setJudul] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [tipe, setTipe] = useState<ExamType>("uts");
   const [files, setFiles] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
-  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
-  const mapel = subjects.data?.find((s) => s.id === subjectId)?.nama ?? "";
 
   const tipeLabel = TIPE.find((t) => t.value === tipe)?.label ?? "";
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const form = new FormData();
+      files.forEach((f) => form.append("files", f));
+      form.append("judul", judul.trim() || "Prediksi Soal");
+      form.append("tipe", tipe);
+      if (subjectId) form.append("subjectId", subjectId);
+      return predictionsApi.upload(form);
+    },
+    onSuccess: (pred) => {
+      qc.invalidateQueries({ queryKey: ["predictions"] });
+      onClose();
+      router.push(`/app/latihan-soal/${pred.id}`);
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
@@ -146,7 +149,7 @@ export function CreatePredictionModal({
                 <Paperclip className="h-6 w-6" />
               </span>
               <p className="mt-3 font-bold">Tap untuk memilih file</p>
-              <p className="text-xs text-muted">PDF, DOCX, PPT, TXT, PNG, JPG</p>
+              <p className="text-xs text-muted">PDF, DOCX, TXT (teks dianalisis) · PPT/PNG/JPG (disimpan)</p>
             </button>
             <input
               ref={fileRef}
@@ -154,8 +157,27 @@ export function CreatePredictionModal({
               multiple
               accept=".pdf,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg"
               className="hidden"
-              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+              onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
             />
+
+            {files.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl border border-ink-500/60 bg-ink-700/40 px-3 py-2.5 text-sm">
+                    <Paperclip className="h-4 w-4 shrink-0 text-muted" />
+                    <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                    <span className="shrink-0 text-xs text-muted">{(f.size / 1024).toFixed(0)} KB</span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
+                      className="shrink-0 text-muted transition hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <div className="rounded-2xl border border-ink-500/60 bg-ink-700/40 p-4 text-sm">
               <p className="mb-2 flex items-center gap-2 font-bold">
@@ -172,29 +194,36 @@ export function CreatePredictionModal({
               </p>
             </div>
 
+            {create.isError ? (
+              <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">
+                Gagal memproses. Coba lagi.
+              </p>
+            ) : null}
+
             <div className="flex gap-3">
               <button
                 type="button"
+                disabled={create.isPending}
                 onClick={() => setStep(1)}
-                className="flex-1 rounded-2xl border border-ink-500 px-5 py-3.5 font-bold text-white transition hover:bg-ink-600"
+                className="flex-1 rounded-2xl border border-ink-500 px-5 py-3.5 font-bold text-white transition hover:bg-ink-600 disabled:opacity-40"
               >
                 Kembali
               </button>
               <button
                 type="button"
-                disabled={files.length === 0}
-                onClick={() =>
-                  onCreate({
-                    id: String(Date.now()),
-                    judul: judul.trim(),
-                    mapel: mapel.trim() || "Umum",
-                    tipe,
-                    fileCount: files.length,
-                  })
-                }
+                disabled={files.length === 0 || create.isPending}
+                onClick={() => create.mutate()}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition enabled:hover:bg-brand-600 disabled:opacity-40"
               >
-                <Sparkles className="h-4 w-4" /> Proses
+                {create.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Menganalisis…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" /> Proses
+                  </>
+                )}
               </button>
             </div>
           </div>

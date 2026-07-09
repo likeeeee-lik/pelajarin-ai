@@ -144,9 +144,14 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
-## Halaman detail Prediksi Soal (ref 28.1page after bikin soal) (2026-07-09)
-Klik kartu prediksi → `/app/latihan-soal/[id]` (client, baca `usePredictions` localStorage). Header: judul + meta (mapel/tanggal id-ID/tipe/"N soal sumber"/badge Selesai) + pill "Terkunci 👑". Konten: daftar soal prediksi (nomor, badge kesulitan warna, badge topik, pertanyaan, opsi pilihan ganda). Sidebar kanan "Analisis" = konten Pro di-blur + overlay Lock "Analisis lengkap tersedia di Pro" → tombol Tingkatkan (/app/upgrade).
-Soal = MOCK deterministik dari id via `lib/prediction-mock.ts` (bank Fisika/IPA, Matematika, Umum dipilih dari kata kunci mapel; soal kinematika referensi jawab ≈30 m). PredictionCard kini pakai tipe `PredictionItem` (bukan `Prediction`). TODO(API): ganti mock dgn prediksi AI nyata.
+## Prediksi Soal NYATA: upload→parse→AI→DB (2026-07-09)
+Fitur Latihan Soal kini benar-benar berfungsi lewat API (bukan localStorage/mock lagi).
+- **Endpoint**: `POST /predictions/upload` (`FilesInterceptor("files",10)`, multi-file, maks 50MB/file) → `PredictionsService.createFromUpload`: parse tiap file via `IngestionService` (PDF/DOCX/TXT; gambar/PPT hanya disimpan), upload ke Supabase Storage di `{userId}/predictions/...`, gabung teks jadi sourceText → `ai.predictExam` → simpan `ExamPrediction` (sourceFiles JSON = metadata, prediksiJson = {questions}). `GET /predictions` & `/predictions/:id` kembalikan `PredictionView` rapi (mapel di-resolve dari subjectId, fileCount, questions).
+- `predictions.module` import `IngestionModule`. AI/Storage sudah @Global.
+- **AI**: `PredictedQuestion` + `pembahasan`. Mock provider punya bank Fisika/Matematika/Umum (5 soal, dipilih dari kata kunci judul+sumber; kinematika jawab 30 m). Claude prompt: 5 PG + pembahasan. AI_PROVIDER=mock skrg → isi ANTHROPIC_API_KEY utk prediksi nyata.
+- **Web**: `predictionsApi` (list/get/upload FormData); `latihan-soal/page` pakai useQuery(["predictions"]); create-modal upload beneran (FilesInterceptor field "files") + navigate ke detail; `[id]/page` fetch API render questions; PredictionCard tipe `ExamPrediction`; profil pakai predictionsApi. **Dihapus**: `lib/prediction-mock.ts` + `usePredictions/addPrediction/PredictionItem` di store.
+- Verified E2E: upload txt fisika → 201, file tersimpan Storage, 5 soal (Q1 kinematika→30m), GET/LIST 200.
+- Belum ada: endpoint DELETE prediksi; gating Pro nyata utk "Analisis lengkap".
 
 ## SubjectCombobox jadi komponen bersama (2026-07-09)
 `components/app/subject-combobox.tsx` (searchable + "Buat X" + Enter + link kelola) diekstrak dari create-material-modal, dipakai di **form unggah materi** & **form Prediksi Soal** (`latihan-soal/create-modal.tsx`, dulu input teks biasa → kini combobox; `mapel` di-resolve dari nama subjek terpilih). Predictions masih localStorage (mapel = string nama).

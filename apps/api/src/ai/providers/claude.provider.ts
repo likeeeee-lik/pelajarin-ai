@@ -121,10 +121,12 @@ export class ClaudeAiProvider extends AiProvider {
 
   predictExam(input: PredictExamInput): Promise<PredictExamResult> {
     return this.json(
-      `Kamu penganalisis pola soal ujian.`,
-      `Analisis soal ${input.tipe} berikut dan prediksi soal yang mungkin keluar berikutnya untuk "${input.judul}". ` +
+      `Kamu penganalisis pola soal ujian yang berpengalaman.`,
+      `Analisis pola soal ${input.tipe} berikut (topik yang sering muncul, tingkat kesulitan, bentuk soal) ` +
+        `lalu buat 5 PREDIKSI soal pilihan ganda yang paling mungkin keluar berikutnya untuk "${input.judul}". ` +
+        `Setiap soal wajib punya 4 opsi, satu jawaban benar (harus sama persis dengan salah satu opsi), dan pembahasan singkat. ` +
         `Soal sumber:\n"""${input.sourceText.slice(0, 8000)}"""\n` +
-        `Format: {"questions":[{"pertanyaan":"...","tingkat":"mudah|sedang|sulit","topik":"...","opsi":["..."],"jawaban":"..."}]}`,
+        `Format: {"questions":[{"pertanyaan":"...","tingkat":"mudah|sedang|sulit","topik":"...","opsi":["a","b","c","d"],"jawaban":"...","pembahasan":"..."}]}`,
     );
   }
 }

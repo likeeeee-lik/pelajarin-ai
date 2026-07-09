@@ -115,6 +115,38 @@ export interface PublicMaterial {
   chapters: { urutan: number; judul: string; kontenMd: string | null }[];
 }
 
+// ── Prediksi Soal Ujian ─────────────────────────────────────
+export type ExamType = "uts" | "uas" | "kuis" | "latihan";
+export type Tingkat = "mudah" | "sedang" | "sulit";
+
+export interface PredictedQuestion {
+  pertanyaan: string;
+  tingkat: Tingkat;
+  topik: string;
+  opsi?: string[];
+  jawaban?: string;
+  pembahasan?: string;
+}
+
+export interface PredictionFile {
+  name: string;
+  path: string | null;
+  size: number;
+  mime: string;
+}
+
+export interface ExamPrediction {
+  id: string;
+  judul: string;
+  tipe: ExamType;
+  subjectId: string | null;
+  mapel: string | null;
+  fileCount: number;
+  sourceFiles: PredictionFile[];
+  questions: PredictedQuestion[];
+  createdAt: string;
+}
+
 export interface CreateMaterialInput {
   judul: string;
   tipe: MaterialType;

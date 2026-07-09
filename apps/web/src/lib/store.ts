@@ -29,15 +29,6 @@ export interface Material {
   createdAt: number;
 }
 
-export interface PredictionItem {
-  id: string;
-  judul: string;
-  mapel: string;
-  tipe: "uts" | "uas" | "kuis" | "latihan";
-  fileCount: number;
-  createdAt: number;
-}
-
 export interface ProfileSettings {
   nama: string;
   bahasaTampilan: string;
@@ -93,7 +84,6 @@ function createStore<T>(key: string, initial: T): Store<T> {
 
 const subjectsStore = createStore<Subject[]>("pelajarin.subjects", []);
 const materialsStore = createStore<Material[]>("pelajarin.materials", []);
-const predictionsStore = createStore<PredictionItem[]>("pelajarin.predictions", []);
 const profileStore = createStore<ProfileSettings>("pelajarin.profile", {
   nama: "Likae",
   bahasaTampilan: "id",
@@ -123,12 +113,6 @@ export function addMaterial(input: Omit<Material, "id" | "createdAt">) {
 }
 export function removeMaterial(id: string) {
   materialsStore.write(materialsStore.read().filter((m) => m.id !== id));
-}
-
-// ── Predictions ─────────────────────────────────────────────
-export const usePredictions = () => useStore(predictionsStore);
-export function addPrediction(input: Omit<PredictionItem, "id" | "createdAt">) {
-  predictionsStore.write([{ ...input, id: uid(), createdAt: Date.now() }, ...predictionsStore.read()]);
 }
 
 // ── Profile ─────────────────────────────────────────────────

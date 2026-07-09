@@ -18,14 +18,15 @@ import { useQuery } from "@tanstack/react-query";
 import { MOCK_USER } from "@/lib/mock-user";
 import { BAHASA_GENERASI, BAHASA_TAMPILAN, MOCK_SUBSCRIPTION } from "@/lib/mock-profile";
 import { ActivityHeatmap } from "@/components/app/profil/activity-heatmap";
-import { materialsApi } from "@/lib/api/resources";
-import { saveProfile, usePredictions, useProfileSettings } from "@/lib/store";
+import { materialsApi, predictionsApi } from "@/lib/api/resources";
+import { saveProfile, useProfileSettings } from "@/lib/store";
 
 export default function ProfilPage() {
   const profile = useProfileSettings();
   const materialsQuery = useQuery({ queryKey: ["materials"], queryFn: materialsApi.list });
   const materials = materialsQuery.data ?? [];
-  const predictions = usePredictions();
+  const predictionsQuery = useQuery({ queryKey: ["predictions"], queryFn: predictionsApi.list });
+  const predictions = predictionsQuery.data ?? [];
 
   const [nama, setNama] = useState(profile.nama);
   const [bahasaTampilan, setBahasaTampilan] = useState(profile.bahasaTampilan);
