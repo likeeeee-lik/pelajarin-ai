@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoWordmark } from "@/components/logo";
+import { NavAuthButton } from "./nav-auth-button";
 
 const LINKS = [
   { href: "/#cara-kerja", label: "Cara Kerja" },
@@ -26,12 +27,7 @@ export function MarketingNavbar() {
           <span className="hidden rounded-lg border border-ink-500 px-2.5 py-1 text-xs text-muted sm:inline">
             ID
           </span>
-          <Link
-            href="/masuk"
-            className="rounded-2xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-brand transition hover:bg-brand-600"
-          >
-            Masuk
-          </Link>
+          <NavAuthButton />
         </div>
       </div>
     </header>

@@ -10,6 +10,8 @@
  * mengubah komponen UI.
  */
 
+import { clearSession } from "./session";
+
 export type OAuthProvider = "google" | "discord";
 
 const MODE = process.env.NEXT_PUBLIC_AUTH_MODE ?? "stub";
@@ -55,5 +57,10 @@ export function completeConsent() {
 }
 
 export function signOut() {
-  window.location.href = isLogtoMode() ? `/api/logto/sign-out` : `/`;
+  if (isLogtoMode()) {
+    window.location.href = `/api/logto/sign-out`;
+    return;
+  }
+  clearSession(); // stub: hapus penanda sesi lalu ke beranda
+  window.location.href = `/`;
 }

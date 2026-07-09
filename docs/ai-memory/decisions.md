@@ -1,5 +1,8 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Penanda sesi login di navbar landing (2026-07-09)
+Mode auth masih stub (belum ada sesi nyata). `lib/session.ts` = flag localStorage `pelajarin.session` (useSyncExternalStore). Diset via `markSignedIn()` di `AppShell` useEffect (masuk dashboard = login), dihapus via `clearSession()` di `signOut()` stub (Keluar). Navbar landing pakai `<NavAuthButton/>` (client): kalau signedIn → avatar+nama profil (link ke /app), else tombol "Masuk". TODO(logto): ganti dgn sesi Logto asli.
+
 ## Statistik nyata dashboard & profil (2026-07-09)
 Endpoint `GET /stats` (StatsModule/StatsService, JwtAuthGuard) → hitungan agregat user via `prisma.count` paralel: materials, flashcards, quizzes, predictions, subjects, files (MaterialFile via relasi `material.userId`). Flashcard & Quiz punya `userId` langsung.
 Web: `statsApi.get()` + tipe `UserStats`. **Dashboard StatCards** dirombak (dulu dari `MOCK_USER`: streak/level/xp/rank) → 4 kartu NYATA: Total Catatan (+file), Flashcard, Kuis, Prediksi. **Profil** grid statistik pakai `/stats` (dulu Flashcard/Kuis hardcoded 0). Query key `["stats"]`.
