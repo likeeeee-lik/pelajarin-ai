@@ -54,7 +54,7 @@ export function CreatePredictionModal({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
       <button type="button" aria-hidden onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative z-10 w-full max-w-lg rounded-xl2 border border-ink-500 bg-ink-800 p-6 shadow-2xl">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl2 border border-ink-500 bg-ink-800 p-6 shadow-2xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button type="button" onClick={onClose} className="text-muted transition hover:text-white">
