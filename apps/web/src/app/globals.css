@@ -43,6 +43,11 @@ body {
   }
 }
 
+@keyframes loading {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
 /* Rendered markdown (isi bab). */
 .md {
   line-height: 1.7;

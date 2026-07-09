@@ -3,15 +3,46 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, X } from "lucide-react";
-import { SOURCES } from "./sources";
+import {
+  Brain,
+  Check,
+  ChevronDown,
+  FileText,
+  Layers,
+  Loader2,
+  Plus,
+  Search,
+  Sparkles,
+  UploadCloud,
+  X,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { materialsApi, subjectsApi } from "@/lib/api/resources";
 import type { MaterialType } from "@/lib/api/types";
 
-const MODES = [
-  { value: "kilat", label: "Kilat", desc: "Poin penting" },
-  { value: "standar", label: "Standar", desc: "Seimbang" },
-  { value: "lengkap", label: "Lengkap", desc: "Detail" },
+const DROP: Record<string, { accept: string; text: string; sub: string }> = {
+  file: {
+    accept: ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt",
+    text: "Drag & drop file di sini, atau klik untuk memilih",
+    sub: "PDF, Word, PowerPoint, Excel, Text (Maks. 100MB per file)",
+  },
+  audio: {
+    accept: "audio/*,.mp3,.wav",
+    text: "Drag & drop file audio di sini, atau klik untuk memilih",
+    sub: "MP3, WAV (Maks. 300MB per file)",
+  },
+  video: {
+    accept: "video/*,.mp4,.mov",
+    text: "Drag & drop file video di sini, atau klik untuk memilih",
+    sub: "MP4, MOV (Maks. 500MB per file)",
+  },
+};
+
+const MODES: { value: string; label: string; desc: string; icon: LucideIcon }[] = [
+  { value: "kilat", label: "Kilat", desc: "Poin penting saja", icon: Zap },
+  { value: "standar", label: "Standar", desc: "Seimbang", icon: Layers },
+  { value: "lengkap", label: "Lengkap", desc: "Detail & mendalam", icon: Sparkles },
 ];
 const GAYA = [
   { value: "formal", label: "Serius & Formal" },
@@ -20,41 +51,36 @@ const GAYA = [
   { value: "akademis", label: "Akademis & Ilmiah" },
 ];
 const BAHASA = [
-  { value: "id", label: "Bahasa Indonesia" },
-  { value: "en", label: "English" },
-  { value: "ar", label: "العربية (Arab)" },
-  { value: "zh", label: "中文 (Mandarin)" },
+  { value: "id", label: "🇮🇩 Bahasa Indonesia" },
+  { value: "en", label: "🇺🇸 English" },
+  { value: "ar", label: "🇸🇦 العربية (Arab)" },
+  { value: "zh", label: "🇨🇳 中文 (Mandarin)" },
 ];
+
+const fmtSize = (b: number) => `${(b / 1024 / 1024).toFixed(2)} MB`;
+const stripExt = (n: string) => n.replace(/\.[^.]+$/, "");
 
 export function CreateMaterialModal({ source, onClose }: { source: MaterialType; onClose: () => void }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const meta = SOURCES.find((s) => s.id === source);
-  const Icon = meta?.icon;
+  const isNote = source === "note";
+  const isFile = source === "file" || source === "audio" || source === "video";
 
-  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
-
+  const [step, setStep] = useState<1 | 2>(1);
   const [judul, setJudul] = useState("");
-  const [konten, setKonten] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [subjectId, setSubjectId] = useState("");
   const [mode, setMode] = useState("standar");
   const [gaya, setGaya] = useState("santai");
   const [bahasa, setBahasa] = useState("id");
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const isFile = source === "file" || source === "audio" || source === "video";
-  const canCreate =
-    judul.trim().length > 0 &&
-    (source === "note" ? true : source === "youtube" ? url.trim().length > 0 : file != null);
 
   const create = useMutation({
     mutationFn: () => {
       if (isFile) {
         const form = new FormData();
         form.append("file", file as File);
-        form.append("judul", judul.trim());
+        form.append("judul", stripExt((file as File).name));
         form.append("tipe", source);
         if (subjectId) form.append("subjectId", subjectId);
         form.append("modeBelajar", mode);
@@ -63,11 +89,10 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
         return materialsApi.upload(form);
       }
       return materialsApi.create({
-        judul: judul.trim(),
+        judul: isNote ? judul.trim() : judul.trim() || "Catatan dari YouTube",
         tipe: source,
         subjectId: subjectId || undefined,
         sourceUrl: source === "youtube" ? url.trim() : undefined,
-        rawText: source === "note" ? konten.trim() : undefined,
         modeBelajar: mode,
         gayaPenulisan: gaya,
         bahasa,
@@ -80,157 +105,250 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
     },
   });
 
+  const canStep1 = isFile ? file != null : source === "youtube" ? url.trim().length > 0 : true;
+  const title = isNote ? "Buat Catatan Baru" : "Unggah File";
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
       <button type="button" aria-hidden onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl2 border border-ink-500 bg-ink-800 p-6 shadow-2xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {Icon && meta ? (
-              <span className={`grid h-10 w-10 place-items-center rounded-xl ${meta.color}`}>
-                <Icon className="h-5 w-5" />
-              </span>
-            ) : null}
-            <h2 className="text-lg font-extrabold">{meta?.label ?? "Buat Materi"}</h2>
-          </div>
+      <div className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl2 border border-ink-500 bg-ink-800 p-6 shadow-2xl">
+        {create.isPending ? <ProcessingOverlay /> : null}
+
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-xl font-extrabold">{title}</h2>
           <button type="button" onClick={onClose} className="text-muted transition hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-5 flex flex-col gap-4">
-          <Field label="Judul">
-            <input value={judul} onChange={(e) => setJudul(e.target.value)} placeholder="Beri judul materi..." className="input-field" />
-          </Field>
-
-          {source === "note" ? (
-            <Field label="Isi Catatan (opsional)">
-              <textarea value={konten} onChange={(e) => setKonten(e.target.value)} rows={4} placeholder="Tulis atau tempel materi..." className="input-field resize-y" />
+        {/* ── Tulis Catatan: satu langkah ── */}
+        {isNote ? (
+          <div className="flex flex-col gap-5">
+            <Field label="Judul Catatan" hint="Kosongkan untuk menggunakan nama default">
+              <input value={judul} onChange={(e) => setJudul(e.target.value)} placeholder="Catatan Baru" className="input-field" />
             </Field>
-          ) : source === "youtube" ? (
-            <Field label="Link YouTube">
-              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="input-field" />
+            <Field label="Mata Pelajaran/Kuliah" hint="Opsional, bisa ditambahkan nanti" manage>
+              <SubjectCombobox value={subjectId} onChange={setSubjectId} />
             </Field>
-          ) : (
-            <Field label="File">
-              <button type="button" onClick={() => fileRef.current?.click()} className="w-full rounded-2xl border-2 border-dashed border-ink-500 bg-ink-700/30 px-4 py-6 text-center text-sm text-muted transition hover:border-brand/60">
-                {file ? <span className="text-white">{file.name}</span> : "Tap untuk memilih file"}
-                <span className="mt-1 block text-xs">{meta?.desc}</span>
-              </button>
-              <input ref={fileRef} type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={onClose} className="rounded-2xl border border-ink-500 px-5 py-2.5 font-semibold text-white hover:bg-ink-600">Batal</button>
+              <button type="button" onClick={() => create.mutate()} className="rounded-2xl bg-brand px-5 py-2.5 font-bold text-white shadow-brand">Buat Catatan</button>
+            </div>
+          </div>
+        ) : step === 1 ? (
+          /* ── Langkah 1: sumber (dropzone / URL) ── */
+          <div className="flex flex-col gap-5">
+            {source === "youtube" ? (
+              <Field label="URL Video YouTube" hint="Masukkan URL video YouTube yang ingin diubah menjadi catatan">
+                <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="input-field" />
+              </Field>
+            ) : (
+              <Dropzone source={source} file={file} onFile={setFile} />
+            )}
+            <div className="flex justify-between gap-3">
+              <button type="button" onClick={onClose} className="rounded-2xl border border-ink-500 px-5 py-2.5 font-semibold text-white hover:bg-ink-600">Batal</button>
+              <button type="button" disabled={!canStep1} onClick={() => setStep(2)} className="rounded-2xl bg-brand px-6 py-2.5 font-bold text-white shadow-brand disabled:opacity-40">Lanjutkan</button>
+            </div>
+          </div>
+        ) : (
+          /* ── Langkah 2: konfigurasi AI ── */
+          <div className="flex flex-col gap-5">
+            <Field label="Mata Pelajaran/Kuliah" manage>
+              <SubjectCombobox value={subjectId} onChange={setSubjectId} />
             </Field>
-          )}
 
-          <Field label="Mata Pelajaran (opsional)">
-            <SubjectSelect
-              value={subjectId}
-              onChange={setSubjectId}
-              subjects={subjects.data ?? []}
-              onCreated={() => qc.invalidateQueries({ queryKey: ["subjects"] })}
-            />
-          </Field>
-
-          {source !== "note" ? (
-            <>
-              <Field label="Mode Belajar">
-                <div className="grid grid-cols-3 gap-2">
-                  {MODES.map((m) => (
-                    <button key={m.value} type="button" onClick={() => setMode(m.value)} className={`rounded-xl border p-2.5 text-center transition ${mode === m.value ? "border-brand bg-brand/10 text-brand" : "border-ink-500/70 bg-ink-700/40"}`}>
-                      <p className="text-sm font-bold">{m.label}</p>
+            <div>
+              <p className="mb-2 text-sm font-bold">Mode Belajar</p>
+              <div className="grid grid-cols-3 gap-3">
+                {MODES.map((m) => {
+                  const on = mode === m.value;
+                  const Icon = m.icon;
+                  return (
+                    <button key={m.value} type="button" onClick={() => setMode(m.value)} className={`rounded-2xl border p-4 text-center transition ${on ? "border-brand bg-brand/10" : "border-ink-500/70 bg-ink-700/40 hover:border-ink-500"}`}>
+                      <Icon className={`mx-auto h-6 w-6 ${on ? "text-brand" : "text-muted"}`} />
+                      <p className={`mt-2 font-bold ${on ? "text-brand" : ""}`}>{m.label}</p>
                       <p className="text-[11px] text-muted">{m.desc}</p>
                     </button>
-                  ))}
-                </div>
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Gaya Penulisan">
-                  <select value={gaya} onChange={(e) => setGaya(e.target.value)} className="input-field">
-                    {GAYA.map((g) => <option key={g.value} value={g.value} className="bg-ink-700">{g.label}</option>)}
-                  </select>
-                </Field>
-                <Field label="Bahasa">
-                  <select value={bahasa} onChange={(e) => setBahasa(e.target.value)} className="input-field">
-                    {BAHASA.map((b) => <option key={b.value} value={b.value} className="bg-ink-700">{b.label}</option>)}
-                  </select>
-                </Field>
+                  );
+                })}
               </div>
-            </>
-          ) : null}
+            </div>
 
-          {create.isError ? <p className="text-sm text-red-400">Gagal membuat materi. Pastikan API berjalan.</p> : null}
+            <Field label="Gaya Penulisan">
+              <SelectBox value={gaya} onChange={setGaya} options={GAYA} />
+            </Field>
+            <Field label="Bahasa Generasi" hint="Bahasa yang digunakan AI untuk menghasilkan catatan">
+              <SelectBox value={bahasa} onChange={setBahasa} options={BAHASA} />
+            </Field>
 
-          <button
-            type="button"
-            disabled={!canCreate || create.isPending}
-            onClick={() => create.mutate()}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition enabled:hover:bg-brand-600 disabled:opacity-40"
-          >
-            {create.isPending ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" /> Memproses dengan AI...
-              </>
-            ) : (
-              "Buat"
-            )}
+            {isFile && file ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-ink-500/60 bg-ink-700/40 px-4 py-3">
+                <FileText className="h-5 w-5 text-sky-400" />
+                <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
+                <span className="text-xs text-muted">{fmtSize(file.size)}</span>
+              </div>
+            ) : null}
+
+            <div className="flex justify-between gap-3">
+              <button type="button" onClick={() => setStep(1)} className="rounded-2xl border border-ink-500 px-5 py-2.5 font-semibold text-white hover:bg-ink-600">Kembali</button>
+              <button type="button" onClick={() => create.mutate()} className="rounded-2xl bg-brand px-6 py-2.5 font-bold text-white shadow-brand">Lanjutkan</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Dropzone({ source, file, onFile }: { source: MaterialType; file: File | null; onFile: (f: File | null) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [drag, setDrag] = useState(false);
+  const meta = DROP[source] ?? DROP.file;
+
+  return (
+    <div>
+      <div
+        onClick={() => ref.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files?.[0]; if (f) onFile(f); }}
+        className={`grid cursor-pointer place-items-center rounded-2xl border-2 border-dashed p-10 text-center transition ${drag ? "border-brand bg-brand/5" : "border-ink-500 bg-ink-700/20 hover:border-brand/60"}`}
+      >
+        <span className="grid h-16 w-16 place-items-center rounded-full bg-brand/15 text-brand">
+          <UploadCloud className="h-7 w-7" />
+        </span>
+        <p className="mt-4 font-bold">{meta.text}</p>
+        <p className="mt-1 text-xs text-muted">{meta.sub}</p>
+      </div>
+      <input ref={ref} type="file" accept={meta.accept} className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+
+      {file ? (
+        <div className="mt-3 flex items-center gap-3 rounded-2xl border border-ink-500/60 bg-ink-700/40 px-4 py-3">
+          <FileText className="h-5 w-5 text-sky-400" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{file.name}</p>
+            <p className="text-xs text-muted">{fmtSize(file.size)}</p>
+          </div>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onFile(null); }} className="text-muted hover:text-white">
+            <X className="h-4 w-4" />
           </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SubjectCombobox({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const qc = useQueryClient();
+  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+
+  const list = subjects.data ?? [];
+  const selected = list.find((s) => s.id === value);
+  const filtered = list.filter((s) => s.nama.toLowerCase().includes(q.trim().toLowerCase()));
+  const exact = list.some((s) => s.nama.toLowerCase() === q.trim().toLowerCase());
+
+  const createSubject = useMutation({
+    mutationFn: () => subjectsApi.create(q.trim()),
+    onSuccess: (s) => {
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+      onChange(s.id);
+      setOpen(false);
+      setQ("");
+    },
+  });
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between rounded-2xl border border-ink-500 bg-ink-700/60 px-4 py-3 text-left">
+        <span className={selected ? "" : "text-muted"}>{selected ? selected.nama : "Pilih mata pelajaran..."}</span>
+        <ChevronDown className="h-4 w-4 text-muted" />
+      </button>
+
+      {open ? (
+        <>
+          <button type="button" aria-hidden onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" />
+          <div className="absolute z-20 mt-2 w-full rounded-2xl border border-ink-500 bg-ink-800 p-2 shadow-xl">
+            <div className="flex items-center gap-2 rounded-xl border border-ink-500/60 bg-ink-700/50 px-3 py-2">
+              <Search className="h-4 w-4 text-muted" />
+              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari atau ketik untuk membuat..." className="w-full bg-transparent text-sm outline-none" />
+            </div>
+            <div className="mt-2 max-h-48 overflow-y-auto">
+              {value ? (
+                <button type="button" onClick={() => { onChange(""); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted hover:bg-ink-700">
+                  Tanpa kategori
+                </button>
+              ) : null}
+              {filtered.map((s) => (
+                <button key={s.id} type="button" onClick={() => { onChange(s.id); setOpen(false); }} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-ink-700">
+                  {s.nama}
+                  {value === s.id ? <Check className="h-4 w-4 text-brand" /> : null}
+                </button>
+              ))}
+              {q.trim() && !exact ? (
+                <button type="button" onClick={() => createSubject.mutate()} disabled={createSubject.isPending} className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg border border-ink-500/60 px-3 py-2 text-sm font-semibold text-brand hover:bg-ink-700">
+                  <Plus className="h-4 w-4" /> Buat &quot;{q.trim()}&quot;
+                </button>
+              ) : null}
+              {filtered.length === 0 && !q.trim() ? <p className="px-3 py-2 text-sm text-muted">Ketik untuk mencari/membuat.</p> : null}
+            </div>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function SelectBox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="input-field">
+      {options.map((o) => (
+        <option key={o.value} value={o.value} className="bg-ink-700">{o.label}</option>
+      ))}
+    </select>
+  );
+}
+
+function ProcessingOverlay() {
+  return (
+    <div className="absolute inset-0 z-30 grid place-items-center rounded-xl2 bg-ink-800/95">
+      <div className="text-center">
+        <div className="relative mx-auto h-24 w-24">
+          <span className="absolute inset-0 animate-spin rounded-full border-4 border-ink-500 border-t-brand" />
+          <span className="absolute inset-0 grid place-items-center">
+            <Brain className="h-8 w-8 text-brand" />
+          </span>
+        </div>
+        <h3 className="mt-4 text-lg font-extrabold">Memproses dengan AI</h3>
+        <p className="mt-1 text-sm text-muted">Menganalisis konten dengan AI...</p>
+        <div className="mx-auto mt-4 h-1.5 w-56 overflow-hidden rounded-full bg-ink-500/60">
+          <div className="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] rounded-full bg-brand" />
         </div>
       </div>
     </div>
   );
 }
 
-function SubjectSelect({
-  value,
-  onChange,
-  subjects,
-  onCreated,
+function Field({
+  label,
+  hint,
+  manage,
+  children,
 }: {
-  value: string;
-  onChange: (v: string) => void;
-  subjects: { id: string; nama: string }[];
-  onCreated: () => void;
+  label: string;
+  hint?: string;
+  manage?: boolean;
+  children: React.ReactNode;
 }) {
-  const [creating, setCreating] = useState(false);
-  const [nama, setNama] = useState("");
-  const createSubject = useMutation({
-    mutationFn: () => subjectsApi.create(nama.trim()),
-    onSuccess: (s) => {
-      onCreated();
-      onChange(s.id);
-      setCreating(false);
-      setNama("");
-    },
-  });
-
-  if (creating) {
-    return (
-      <div className="flex gap-2">
-        <input autoFocus value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama mata pelajaran..." className="input-field flex-1" />
-        <button type="button" disabled={!nama.trim() || createSubject.isPending} onClick={() => createSubject.mutate()} className="rounded-xl bg-brand px-4 font-bold text-white disabled:opacity-40">
-          Buat
-        </button>
-        <button type="button" onClick={() => setCreating(false)} className="px-2 text-sm text-muted">Batal</button>
-      </div>
-    );
-  }
-  return (
-    <div className="flex gap-2">
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="input-field flex-1">
-        <option value="" className="bg-ink-700">Tanpa kategori</option>
-        {subjects.map((s) => <option key={s.id} value={s.id} className="bg-ink-700">{s.nama}</option>)}
-      </select>
-      <button type="button" onClick={() => setCreating(true)} className="grid w-11 place-items-center rounded-xl border border-ink-500 text-muted transition hover:text-white" title="Buat mata pelajaran">
-        <Plus className="h-4 w-4" />
-      </button>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-semibold text-muted">{label}</span>
+      <span className="mb-1.5 flex items-center justify-between">
+        <span className="text-sm font-bold">{label}</span>
+        {manage ? <a href="/app/mata-pelajaran" className="text-xs font-semibold text-brand">Kelola mata pelajaran</a> : null}
+      </span>
       {children}
+      {hint ? <span className="mt-1 block text-xs text-muted">{hint}</span> : null}
     </label>
   );
 }

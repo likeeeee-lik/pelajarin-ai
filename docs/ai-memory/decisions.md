@@ -144,6 +144,14 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
+## FORM UPLOAD DISESUAIKAN REFERENSI (2026-07-09)
+`create-material-modal.tsx` dirombak agar cocok `note-workspace-spec.md` §A (screenshot userDashboard 1–4,6,9,12,16):
+- **File/Audio/Video = 2 langkah**: (1) **Dropzone** drag&drop + klik, teks "Drag & drop file di sini, atau klik untuk memilih" + format per sumber (file: PDF/Word/PPT/Excel/Text 100MB; audio: MP3/WAV 300MB; video: MP4/MOV 500MB) + kartu file terpilih (nama+ukuran "X.XX MB"+X). (2) **Config**: Mata Pelajaran/Kuliah (**SubjectCombobox** searchable + "Buat 'X'" + link Kelola), **Mode Belajar** 3 kartu (Kilat/Standar/Lengkap + ikon+desc), **Gaya Penulisan** (Serius&Formal/Ramah&Santai/Menyenangkan&Kreatif/Akademis&Ilmiah), **Bahasa Generasi** (🇮🇩/🇺🇸/🇸🇦/🇨🇳). Tombol Batal/Kembali/Lanjutkan.
+- **YouTube**: langkah 1 = field "URL Video YouTube", langkah 2 = config sama.
+- **Tulis Catatan**: 1 langkah "Buat Catatan Baru" (Judul Catatan opsional + Mata Pelajaran) → "Buat Catatan".
+- Judul auto: file→nama file tanpa ekstensi; youtube→"Catatan dari YouTube".
+- Saat submit tampil overlay **"Memproses dengan AI"** (ring spin + Brain + bar `@keyframes loading`). Wiring API tetap (upload FormData / create JSON). Header "Unggah File" (atau "Buat Catatan Baru").
+
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:
 - Landing **"Mulai Gratis Sekarang" → `/onboarding`** (wizard, tanpa login).
