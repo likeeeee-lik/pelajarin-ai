@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { QueryProvider } from "@/components/query-provider";
 
 export const metadata: Metadata = {
   title: "Pelajarin.ai — Ubah 6 Jam Belajar Jadi 1 Jam",
@@ -14,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark">
-      <body>{children}</body>
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

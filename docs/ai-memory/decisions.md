@@ -103,7 +103,17 @@ User tambah 55 screenshot detail (`docs/ss/web/userDashboard/`) → fitur inti b
 - Helper `MaterialsService.getContext(user, materialId, chapterIds?)` = gabung isi bab → konteks AI (dipakai mindmap/flashcards/quiz/chat). Modul non-materials import `MaterialsModule`.
 - Json fields (mindmap/quiz/prediction) di-cast `as unknown as Prisma.InputJsonValue`.
 
-**Belum (slice berikutnya):** ingestion nyata (parse file/transkrip audio/video/youtube), lalu **frontend Note Workspace** (6 tab, editor rich-text, timer Fokus, gating Pro, Bagikan/Ekspor PDF) + migrasi dashboard localStorage→API. `ANTHROPIC_API_KEY` masih kosong (mock aktif) — set AI_PROVIDER=claude + key untuk AI asli.
+## FRONTEND NOTE WORKSPACE — SLICE 1 (2026-07-09) — TERVERIFIKASI
+- **API baru**: `subjects/` module (GET/POST/DELETE `/subjects`, with `_count.materials`).
+- **Web data layer** (`apps/web/src/lib/api/`): `http.ts` (apiFetch + token "dev" utk stub — TODO logto token), `types.ts`, `resources.ts` (subjectsApi/materialsApi/chaptersApi). **React Query** (`@tanstack/react-query`) via `components/query-provider.tsx` di root layout.
+- **Migrasi ke API (bukan localStorage lagi)**: Dashboard collection + create-material-modal (kini form config: subjek+buat, Mode Belajar, Gaya Penulisan, Bahasa → `POST /materials` → redirect `/catatan/:id`), Mata Pelajaran (subjects API), Profil (Total Catatan/File dari API). *store.ts materials/subjects jadi tak terpakai; predictions + profileSettings masih localStorage (Latihan Soal & nama).* 
+- **Note Workspace** di route TOP-LEVEL `app/catatan/[id]/` (di luar AppShell, sesuai layout screenshot): `components/workspace/` — `WorkspaceSidebar` (tab Catatan/MindMap/Flashcards/Kuis/Dokumen/Chat + Tingkatkan + `FocusTimer` Pomodoro), `note-workspace.tsx` (header judul/subjek/Bagikan/Ekspor[stub], fetch material via query).
+- **Tab Catatan FUNGSIONAL**: daftar bab (X/Y selesai, N terkunci), tombol **Buat** (generate isi via `/chapters/:id/generate`), buka **editor** (`chapter-editor.tsx`: textarea Markdown + pratinjau `react-markdown`/remark-gfm, **autosave** debounce → `PATCH /chapters/:id`, badge Tersimpan), **+ Tambah Chapter**, badge Pro.
+- **Tab lain** (MindMap/Flashcards/Kuis/Dokumen/Chat) = `PlaceholderTab` ("segera") — endpoint sudah siap, tinggal wiring UI (slice berikutnya).
+- Verifikasi: buat subjek+materi via API → koleksi dashboard 3 materi → `/catatan/:id` 200, shell workspace (semua tab+Fokus) ter-render. Typecheck web+api lolos.
+- Markdown render distyling via `.md` class di globals.css (belum pakai @tailwindcss/typography).
+
+**Belum (slice berikutnya):** wiring UI tab MindMap/Flashcards/Kuis/Chat/Dokumen ke endpoint; ingestion nyata (parse file/transkrip); Bagikan/Ekspor PDF; migrasi Latihan Soal(predictions) ke API; editor rich-text (TipTap) opsional. `ANTHROPIC_API_KEY` kosong (mock aktif) — set AI_PROVIDER=claude + key utk AI asli.
 
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:

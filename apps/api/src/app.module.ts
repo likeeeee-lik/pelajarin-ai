@@ -3,6 +3,7 @@ import { HealthController } from "./health/health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
 import { AiModule } from "./ai/ai.module";
 import { UsersModule } from "./users/users.module";
+import { SubjectsModule } from "./subjects/subjects.module";
 import { MaterialsModule } from "./materials/materials.module";
 import { ChaptersModule } from "./chapters/chapters.module";
 import { MindmapModule } from "./mindmap/mindmap.module";
@@ -16,6 +17,7 @@ import { PredictionsModule } from "./predictions/predictions.module";
     PrismaModule,
     AiModule,
     UsersModule,
+    SubjectsModule,
     MaterialsModule,
     ChaptersModule,
     MindmapModule,

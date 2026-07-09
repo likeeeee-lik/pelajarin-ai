@@ -1,23 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, Folder, Plus, Trash2 } from "lucide-react";
-import { addSubject, removeSubject, useMaterials, useSubjects } from "@/lib/store";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, Folder, Loader2, Plus, Trash2 } from "lucide-react";
+import { subjectsApi } from "@/lib/api/resources";
 
 export default function MataPelajaranPage() {
-  const subjects = useSubjects();
-  const materials = useMaterials();
+  const qc = useQueryClient();
   const [nama, setNama] = useState("");
+  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
 
-  const totalCatatan = materials.length;
-  const catatanOf = (id: string) => materials.filter((m) => m.subjectId === id).length;
+  const add = useMutation({
+    mutationFn: (n: string) => subjectsApi.create(n),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+      setNama("");
+    },
+  });
+  const del = useMutation({
+    mutationFn: (id: string) => subjectsApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
+  });
 
-  function add() {
-    const trimmed = nama.trim();
-    if (!trimmed) return;
-    addSubject(trimmed);
-    setNama("");
-  }
+  const list = subjects.data ?? [];
+  const totalCatatan = list.reduce((s, x) => s + (x._count?.materials ?? 0), 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,9 +31,7 @@ export default function MataPelajaranPage() {
         <BookOpen className="h-8 w-8 text-brand" />
         <div>
           <h1 className="text-3xl font-extrabold">Mata Pelajaran</h1>
-          <p className="text-sm text-muted">
-            Kelola daftar mata pelajaran untuk mengorganisir catatan Anda
-          </p>
+          <p className="text-sm text-muted">Kelola daftar mata pelajaran untuk mengorganisir catatan Anda</p>
         </div>
       </header>
 
@@ -38,14 +42,14 @@ export default function MataPelajaranPage() {
             <input
               value={nama}
               onChange={(e) => setNama(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && add()}
+              onKeyDown={(e) => e.key === "Enter" && nama.trim() && add.mutate(nama.trim())}
               placeholder="Nama mata pelajaran baru..."
               className="input-field flex-1"
             />
             <button
               type="button"
-              onClick={add}
-              disabled={!nama.trim()}
+              onClick={() => nama.trim() && add.mutate(nama.trim())}
+              disabled={!nama.trim() || add.isPending}
               className="flex items-center gap-2 rounded-2xl bg-brand px-5 py-3 font-bold text-white shadow-brand transition enabled:hover:bg-brand-600 disabled:opacity-40"
             >
               <Plus className="h-4 w-4" /> Tambah
@@ -57,7 +61,7 @@ export default function MataPelajaranPage() {
           <h2 className="text-lg font-bold">Statistik</h2>
           <div className="mt-4 flex gap-10">
             <div>
-              <p className="text-3xl font-extrabold text-brand">{subjects.length}</p>
+              <p className="text-3xl font-extrabold text-brand">{list.length}</p>
               <p className="text-sm text-muted">Total Mata Pelajaran</p>
             </div>
             <div>
@@ -70,28 +74,30 @@ export default function MataPelajaranPage() {
 
       <section>
         <h2 className="mb-4 text-xl font-bold">Daftar Mata Pelajaran</h2>
-        {subjects.length === 0 ? (
+        {subjects.isLoading ? (
+          <div className="card grid place-items-center p-12 text-muted">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : list.length === 0 ? (
           <div className="card grid place-items-center p-12 text-center">
             <Folder className="h-10 w-10 text-muted" />
             <p className="mt-4 font-semibold">Belum ada mata pelajaran</p>
-            <p className="mt-1 text-sm text-muted">
-              Tambahkan mata pelajaran pertama Anda di atas
-            </p>
+            <p className="mt-1 text-sm text-muted">Tambahkan mata pelajaran pertama Anda di atas</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {subjects.map((s) => (
+            {list.map((s) => (
               <div key={s.id} className="card flex items-center gap-3 p-5">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/15 text-brand">
                   <Folder className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">{s.nama}</p>
-                  <p className="text-xs text-muted">{catatanOf(s.id)} catatan</p>
+                  <p className="text-xs text-muted">{s._count?.materials ?? 0} catatan</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeSubject(s.id)}
+                  onClick={() => del.mutate(s.id)}
                   aria-label={`Hapus ${s.nama}`}
                   className="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-red-500/10 hover:text-red-400"
                 >

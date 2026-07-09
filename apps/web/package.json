@@ -12,10 +12,13 @@
   "dependencies": {
     "@logto/next": "^4.2.10",
     "@pelajarin/shared": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
     "lucide-react": "^0.469.0",
     "next": "^15.1.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
