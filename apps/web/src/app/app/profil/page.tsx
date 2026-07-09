@@ -18,15 +18,13 @@ import { useQuery } from "@tanstack/react-query";
 import { MOCK_USER } from "@/lib/mock-user";
 import { BAHASA_GENERASI, BAHASA_TAMPILAN, MOCK_SUBSCRIPTION } from "@/lib/mock-profile";
 import { ActivityHeatmap } from "@/components/app/profil/activity-heatmap";
-import { materialsApi, predictionsApi } from "@/lib/api/resources";
+import { statsApi } from "@/lib/api/resources";
 import { saveProfile, useProfileSettings } from "@/lib/store";
 
 export default function ProfilPage() {
   const profile = useProfileSettings();
-  const materialsQuery = useQuery({ queryKey: ["materials"], queryFn: materialsApi.list });
-  const materials = materialsQuery.data ?? [];
-  const predictionsQuery = useQuery({ queryKey: ["predictions"], queryFn: predictionsApi.list });
-  const predictions = predictionsQuery.data ?? [];
+  const statsQuery = useQuery({ queryKey: ["stats"], queryFn: statsApi.get });
+  const s = statsQuery.data;
 
   const [nama, setNama] = useState(profile.nama);
   const [bahasaTampilan, setBahasaTampilan] = useState(profile.bahasaTampilan);
@@ -41,11 +39,11 @@ export default function ProfilPage() {
   }, [profile.nama, profile.bahasaTampilan, profile.bahasaGenerasi]);
 
   const stats = [
-    { label: "Total Catatan", value: materials.length, icon: FileText, color: "text-sky-400 bg-sky-400/15" },
-    { label: "Flashcard Dibuat", value: 0, icon: BookOpen, color: "text-emerald-400 bg-emerald-400/15" },
-    { label: "Kuis Dibuat", value: 0, icon: ClipboardList, color: "text-purple-400 bg-purple-400/15" },
-    { label: "Prediksi Ujian", value: predictions.length, icon: Target, color: "text-red-400 bg-red-400/15" },
-    { label: "Total File", value: materials.filter((m) => m.tipe !== "note").length, icon: BarChart3, color: "text-brand bg-brand/15" },
+    { label: "Total Catatan", value: s?.materials ?? 0, icon: FileText, color: "text-sky-400 bg-sky-400/15" },
+    { label: "Flashcard Dibuat", value: s?.flashcards ?? 0, icon: BookOpen, color: "text-emerald-400 bg-emerald-400/15" },
+    { label: "Kuis Dibuat", value: s?.quizzes ?? 0, icon: ClipboardList, color: "text-purple-400 bg-purple-400/15" },
+    { label: "Prediksi Ujian", value: s?.predictions ?? 0, icon: Target, color: "text-red-400 bg-red-400/15" },
+    { label: "Total File", value: s?.files ?? 0, icon: BarChart3, color: "text-brand bg-brand/15" },
   ];
 
   function simpan() {

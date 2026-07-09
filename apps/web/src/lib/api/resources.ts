@@ -12,7 +12,12 @@ import type {
   Quiz,
   QuizType,
   Subject,
+  UserStats,
 } from "./types";
+
+export const statsApi = {
+  get: () => apiFetch<UserStats>("/stats"),
+};
 
 /** Kumpulan fungsi API per-resource (dipakai lewat React Query di komponen). */
 

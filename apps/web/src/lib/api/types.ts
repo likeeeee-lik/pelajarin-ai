@@ -115,6 +115,15 @@ export interface PublicMaterial {
   chapters: { urutan: number; judul: string; kontenMd: string | null }[];
 }
 
+export interface UserStats {
+  materials: number;
+  flashcards: number;
+  quizzes: number;
+  predictions: number;
+  subjects: number;
+  files: number;
+}
+
 // ── Prediksi Soal Ujian ─────────────────────────────────────
 export type ExamType = "uts" | "uas" | "kuis" | "latihan";
 export type Tingkat = "mudah" | "sedang" | "sulit";

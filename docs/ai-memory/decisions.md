@@ -1,5 +1,11 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Statistik nyata dashboard & profil (2026-07-09)
+Endpoint `GET /stats` (StatsModule/StatsService, JwtAuthGuard) → hitungan agregat user via `prisma.count` paralel: materials, flashcards, quizzes, predictions, subjects, files (MaterialFile via relasi `material.userId`). Flashcard & Quiz punya `userId` langsung.
+Web: `statsApi.get()` + tipe `UserStats`. **Dashboard StatCards** dirombak (dulu dari `MOCK_USER`: streak/level/xp/rank) → 4 kartu NYATA: Total Catatan (+file), Flashcard, Kuis, Prediksi. **Profil** grid statistik pakai `/stats` (dulu Flashcard/Kuis hardcoded 0). Query key `["stats"]`.
+Verified: buat materi+5 flashcard → materials/flashcards naik; hapus → turun (cascade). Data user saat ini: 6 catatan/5 fc/1 kuis/3 mapel/3 file.
+MASIH mock (butuh sistem aktivitas/gamifikasi = opsi terpisah): streak, level, XP, ranking (dashboard lama), Leaderboard, Streaks page — semua dari `MOCK_USER`/`mock-leaderboard`. ANTHROPIC_API_KEY ditunda (berbayar) — AI_PROVIDER tetap mock.
+
 ## Stack FINAL (dikunci 2026-07-08, sesi ke-2)
 - **Urutan kerja**: WEB dulu → mobile menyusul.
 - **Web frontend**: Next.js (TypeScript) — konsumsi API bersama.

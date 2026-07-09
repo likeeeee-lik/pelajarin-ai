@@ -12,6 +12,7 @@ import { FlashcardsModule } from "./flashcards/flashcards.module";
 import { QuizzesModule } from "./quizzes/quizzes.module";
 import { ChatModule } from "./chat/chat.module";
 import { PredictionsModule } from "./predictions/predictions.module";
+import { StatsModule } from "./stats/stats.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PredictionsModule } from "./predictions/predictions.module";
     QuizzesModule,
     ChatModule,
     PredictionsModule,
+    StatsModule,
   ],
   controllers: [HealthController],
 })
