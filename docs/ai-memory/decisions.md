@@ -144,6 +144,9 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
+## SubjectCombobox jadi komponen bersama (2026-07-09)
+`components/app/subject-combobox.tsx` (searchable + "Buat X" + Enter + link kelola) diekstrak dari create-material-modal, dipakai di **form unggah materi** & **form Prediksi Soal** (`latihan-soal/create-modal.tsx`, dulu input teks biasa → kini combobox; `mapel` di-resolve dari nama subjek terpilih). Predictions masih localStorage (mapel = string nama).
+
 ## FIX: bab manual (Tulis Catatan) buka editor kosong (2026-07-09)
 `catatan-tab.tsx`: keputusan tombol pakai `chapter.status` (bukan ada-tidaknya konten). `status==="ready"` → **Buka** (jika berisi) / **Tulis** (jika kosong) → buka editor untuk diisi user (ref img 19.2). `status==="pending"` (AI belum digenerate) → **Buat**. Bab yang ditambah via `+ Tambah Chapter` = ready+kontenMd"" → langsung bisa ditulis. Materi `tipe:note` mulai 0 bab.
 

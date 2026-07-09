@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dumbbell,
   FileCheck,
@@ -12,6 +13,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { subjectsApi } from "@/lib/api/resources";
+import { SubjectCombobox } from "@/components/app/subject-combobox";
 
 export type ExamType = "uts" | "uas" | "kuis" | "latihan";
 
@@ -39,10 +42,12 @@ export function CreatePredictionModal({
 }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [judul, setJudul] = useState("");
-  const [mapel, setMapel] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [tipe, setTipe] = useState<ExamType>("uts");
   const [files, setFiles] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
+  const mapel = subjects.data?.find((s) => s.id === subjectId)?.nama ?? "";
 
   const tipeLabel = TIPE.find((t) => t.value === tipe)?.label ?? "";
 
@@ -78,15 +83,10 @@ export function CreatePredictionModal({
               />
             </label>
 
-            <label className="block">
+            <div>
               <span className="mb-1.5 block text-sm font-bold">Mata Pelajaran</span>
-              <input
-                value={mapel}
-                onChange={(e) => setMapel(e.target.value)}
-                placeholder="Pilih atau ketik mata pelajaran..."
-                className="input-field"
-              />
-            </label>
+              <SubjectCombobox value={subjectId} onChange={setSubjectId} />
+            </div>
 
             <div>
               <span className="mb-2 block text-sm font-bold">Tipe Ujian</span>
