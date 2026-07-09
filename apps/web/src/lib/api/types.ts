@@ -52,6 +52,53 @@ export interface Material {
   chapters: Chapter[];
 }
 
+// ── Fitur AI turunan ────────────────────────────────────────
+export interface MindmapNode {
+  label: string;
+  children?: MindmapNode[];
+}
+export interface MindMap {
+  id: string;
+  materialId: string;
+  dataJson: MindmapNode;
+}
+
+export interface Flashcard {
+  id: string;
+  materialId: string;
+  front: string;
+  back: string;
+}
+
+export type QuizType = "pilihan_ganda" | "benar_salah" | "isian";
+export interface QuizQuestion {
+  pertanyaan: string;
+  tipe: QuizType;
+  opsi?: string[];
+  jawaban: string;
+  pembahasan?: string;
+}
+export interface Quiz {
+  id: string;
+  materialId: string;
+  soalJson: { count: number; types: QuizType[]; questions: QuizQuestion[] };
+  skor: number | null;
+  createdAt: string;
+}
+
+export interface ChatSession {
+  id: string;
+  materialId: string | null;
+  createdAt: string;
+}
+export interface ChatMessage {
+  id: string;
+  sessionId: string;
+  role: "user" | "assistant" | "system";
+  konten: string;
+  createdAt: string;
+}
+
 export interface CreateMaterialInput {
   judul: string;
   tipe: MaterialType;

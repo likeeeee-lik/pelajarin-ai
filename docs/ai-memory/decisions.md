@@ -113,7 +113,17 @@ User tambah 55 screenshot detail (`docs/ss/web/userDashboard/`) → fitur inti b
 - Verifikasi: buat subjek+materi via API → koleksi dashboard 3 materi → `/catatan/:id` 200, shell workspace (semua tab+Fokus) ter-render. Typecheck web+api lolos.
 - Markdown render distyling via `.md` class di globals.css (belum pakai @tailwindcss/typography).
 
-**Belum (slice berikutnya):** wiring UI tab MindMap/Flashcards/Kuis/Chat/Dokumen ke endpoint; ingestion nyata (parse file/transkrip); Bagikan/Ekspor PDF; migrasi Latihan Soal(predictions) ke API; editor rich-text (TipTap) opsional. `ANTHROPIC_API_KEY` kosong (mock aktif) — set AI_PROVIDER=claude + key utk AI asli.
+## NOTE WORKSPACE — SLICE 2: SEMUA TAB TERWIRING (2026-07-09)
+Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` (`lib/api/resources.ts`, `types.ts`). Komponen di `components/workspace/`:
+- **Mind Map** (`tabs/mindmap-tab.tsx`): empty→"Buat Mind Map"; render **tree rekursif** (Node berjenjang, warna per depth); "Buat Ulang".
+- **Flashcards** (`tabs/flashcards-tab.tsx`): config (jumlah 15/25/50-PRO + `ChapterPicker`) → generate → **deck flip** (klik balik, prev/next, i/total, Buat Ulang).
+- **Kuis** (`tabs/kuis-tab.tsx`): config (Jenis Soal multi PG/BS/Isian, Jumlah 5/15/20/30-PRO, chapter) → **runner interaktif** (radio/isian) → **Selesai→skor** + review benar/salah + pembahasan; Ulangi.
+- **Chat** (`tabs/chat-tab.tsx`): daftar sesi + New Chat, area pesan (user/asisten markdown), selektor **Konteks chapter**, 4 prompt saran; auto-create session saat kirim pertama.
+- **Dokumen** (`tabs/dokumen-tab.tsx`): info sumber (tipe/URL) + pratinjau `rawText`.
+- Shared `chapter-picker.tsx`. Semua via React Query + endpoint API yang sudah ada.
+- Diwire di `note-workspace.tsx` (ganti PlaceholderTab). Verifikasi: workspace 200; endpoint mindmap/flashcards/quiz/chat OK; typecheck web+api lolos.
+
+**Belum:** ingestion nyata (parse file/transkrip audio/video/youtube — kini `rawText`=judul/filename saja); Bagikan/Ekspor PDF (tombol masih stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap (kini textarea Markdown+preview); gating Pro nyata (kini badge visual saja). `ANTHROPIC_API_KEY` kosong (mock) — set AI_PROVIDER=claude + key utk AI asli.
 
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:

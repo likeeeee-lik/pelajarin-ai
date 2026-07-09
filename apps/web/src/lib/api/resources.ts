@@ -1,9 +1,15 @@
 import { apiFetch } from "./http";
 import type {
   Chapter,
+  ChatMessage,
+  ChatSession,
   CreateMaterialInput,
+  Flashcard,
   Material,
   MaterialSummary,
+  MindMap,
+  Quiz,
+  QuizType,
   Subject,
 } from "./types";
 
@@ -30,4 +36,41 @@ export const chaptersApi = {
   update: (id: string, kontenMd: string) =>
     apiFetch<Chapter>(`/chapters/${id}`, { method: "PATCH", body: JSON.stringify({ kontenMd }) }),
   remove: (id: string) => apiFetch<{ ok: true }>(`/chapters/${id}`, { method: "DELETE" }),
+};
+
+export const mindmapApi = {
+  get: (materialId: string) => apiFetch<MindMap | null>(`/materials/${materialId}/mindmap`),
+  generate: (materialId: string) =>
+    apiFetch<MindMap>(`/materials/${materialId}/mindmap/generate`, { method: "POST" }),
+};
+
+export const flashcardsApi = {
+  list: (materialId: string) => apiFetch<Flashcard[]>(`/materials/${materialId}/flashcards`),
+  generate: (materialId: string, input: { count: number; chapterIds?: string[] }) =>
+    apiFetch<Flashcard[]>(`/materials/${materialId}/flashcards/generate`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+};
+
+export const quizzesApi = {
+  list: (materialId: string) => apiFetch<Quiz[]>(`/materials/${materialId}/quizzes`),
+  generate: (materialId: string, input: { count: number; types: QuizType[]; chapterIds?: string[] }) =>
+    apiFetch<Quiz>(`/materials/${materialId}/quizzes/generate`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  get: (quizId: string) => apiFetch<Quiz>(`/quizzes/${quizId}`),
+};
+
+export const chatApi = {
+  listSessions: (materialId: string) => apiFetch<ChatSession[]>(`/materials/${materialId}/chat/sessions`),
+  createSession: (materialId: string) =>
+    apiFetch<ChatSession>(`/materials/${materialId}/chat/sessions`, { method: "POST" }),
+  getMessages: (sessionId: string) => apiFetch<ChatMessage[]>(`/chat/sessions/${sessionId}/messages`),
+  sendMessage: (sessionId: string, input: { question: string; chapterIds?: string[] }) =>
+    apiFetch<{ user: ChatMessage; assistant: ChatMessage }>(`/chat/sessions/${sessionId}/messages`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 };

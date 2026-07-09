@@ -5,9 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Download, Loader2, Share2 } from "lucide-react";
 import { materialsApi } from "@/lib/api/resources";
 import { WorkspaceSidebar } from "./workspace-sidebar";
-import { WORKSPACE_TABS, type WorkspaceTab } from "./tabs-config";
+import { type WorkspaceTab } from "./tabs-config";
 import { CatatanTab } from "./tabs/catatan-tab";
-import { PlaceholderTab } from "./tabs/placeholder-tab";
+import { MindmapTab } from "./tabs/mindmap-tab";
+import { FlashcardsTab } from "./tabs/flashcards-tab";
+import { KuisTab } from "./tabs/kuis-tab";
+import { ChatTab } from "./tabs/chat-tab";
+import { DokumenTab } from "./tabs/dokumen-tab";
 
 export function NoteWorkspace({ id }: { id: string }) {
   const [tab, setTab] = useState<WorkspaceTab>("catatan");
@@ -48,14 +52,12 @@ export function NoteWorkspace({ id }: { id: string }) {
               </div>
             </header>
 
-            {tab === "catatan" ? (
-              <CatatanTab material={material.data} />
-            ) : (
-              (() => {
-                const meta = WORKSPACE_TABS.find((t) => t.id === tab)!;
-                return <PlaceholderTab label={meta.label} icon={meta.icon} />;
-              })()
-            )}
+            {tab === "catatan" ? <CatatanTab material={material.data} /> : null}
+            {tab === "mindmap" ? <MindmapTab materialId={material.data.id} /> : null}
+            {tab === "flashcards" ? <FlashcardsTab material={material.data} /> : null}
+            {tab === "kuis" ? <KuisTab material={material.data} /> : null}
+            {tab === "dokumen" ? <DokumenTab material={material.data} /> : null}
+            {tab === "chat" ? <ChatTab material={material.data} /> : null}
           </>
         )}
       </main>
