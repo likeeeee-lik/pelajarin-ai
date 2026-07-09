@@ -1,16 +1,17 @@
+import Link from "next/link";
 import { FileText, Sparkles } from "lucide-react";
-import type { Prediction } from "./create-modal";
+import type { PredictionItem } from "@/lib/store";
 
-const TIPE_LABEL: Record<Prediction["tipe"], string> = {
+const TIPE_LABEL: Record<PredictionItem["tipe"], string> = {
   uts: "UTS",
   uas: "UAS",
   kuis: "Kuis",
   latihan: "Latihan",
 };
 
-export function PredictionCard({ item }: { item: Prediction }) {
+export function PredictionCard({ item }: { item: PredictionItem }) {
   return (
-    <div className="card p-5">
+    <Link href={`/app/latihan-soal/${item.id}`} className="card block p-5 transition hover:border-brand/50">
       <div className="flex items-center justify-between">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/15 text-brand">
           <Sparkles className="h-5 w-5" />
@@ -24,6 +25,6 @@ export function PredictionCard({ item }: { item: Prediction }) {
       <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
         <FileText className="h-3.5 w-3.5" /> {item.fileCount} file diproses
       </p>
-    </div>
+    </Link>
   );
 }

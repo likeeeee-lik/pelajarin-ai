@@ -144,6 +144,10 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 
 **Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
+## Halaman detail Prediksi Soal (ref 28.1page after bikin soal) (2026-07-09)
+Klik kartu prediksi → `/app/latihan-soal/[id]` (client, baca `usePredictions` localStorage). Header: judul + meta (mapel/tanggal id-ID/tipe/"N soal sumber"/badge Selesai) + pill "Terkunci 👑". Konten: daftar soal prediksi (nomor, badge kesulitan warna, badge topik, pertanyaan, opsi pilihan ganda). Sidebar kanan "Analisis" = konten Pro di-blur + overlay Lock "Analisis lengkap tersedia di Pro" → tombol Tingkatkan (/app/upgrade).
+Soal = MOCK deterministik dari id via `lib/prediction-mock.ts` (bank Fisika/IPA, Matematika, Umum dipilih dari kata kunci mapel; soal kinematika referensi jawab ≈30 m). PredictionCard kini pakai tipe `PredictionItem` (bukan `Prediction`). TODO(API): ganti mock dgn prediksi AI nyata.
+
 ## SubjectCombobox jadi komponen bersama (2026-07-09)
 `components/app/subject-combobox.tsx` (searchable + "Buat X" + Enter + link kelola) diekstrak dari create-material-modal, dipakai di **form unggah materi** & **form Prediksi Soal** (`latihan-soal/create-modal.tsx`, dulu input teks biasa → kini combobox; `mapel` di-resolve dari nama subjek terpilih). Predictions masih localStorage (mapel = string nama).
 
