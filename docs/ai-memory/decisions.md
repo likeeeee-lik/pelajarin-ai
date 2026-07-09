@@ -78,6 +78,24 @@ Data **bertahan saat refresh** & **saling terhubung antar halaman**.
 - **Profil**: 5 stat card dihitung dari store (Total Catatan=materials, Prediksi=predictions, Total File=materials non-note); tombol **Simpan** menulis nama+bahasa ke store → "Tersimpan ✓"; **nama tersinkron** ke Greeting & Sidebar.
 - Semua ditandai `TODO(API)`: ganti store→API saat Logto+DB aktif. `next build` JANGAN dijalankan saat `next dev` aktif (mengunci/menghapus `.next` → dev rusak & butuh `rm -rf .next` + restart). Verifikasi via typecheck + dev.
 
+## NOTE WORKSPACE — FONDASI BACKEND AI (2026-07-09) — epic besar, bertahap
+User tambah 55 screenshot detail (`docs/ss/web/userDashboard/`) → fitur inti berbasis AI. Spec: `docs/ai-memory/note-workspace-spec.md`. Keputusan user: **abstraksi AI + Mock dulu** (swappable ke Claude via env) & **backend nyata (API+DB)**.
+
+**Arsitektur AI (OOP, kunci jangka panjang):** `apps/api/src/ai/`
+- `AiProvider` (abstract class = kontrak & token DI): generateOutline, generateChapter, generateMindmap, generateFlashcards, generateQuiz, chat, predictExam. Tipe di `ai.types.ts`.
+- `providers/mock.provider.ts` (MockAiProvider — konten contoh) & `providers/claude.provider.ts` (ClaudeAiProvider — Anthropic SDK `@anthropic-ai/sdk`, model env `ANTHROPIC_MODEL` default `claude-sonnet-5`).
+- `ai.module.ts` (global): pilih provider via `AI_PROVIDER` env (`mock`|`claude`). `claude` aktif hanya jika `ANTHROPIC_API_KEY` ada, else fallback mock. **Semua fitur inject `AiProvider`, bukan Claude langsung.**
+- Env baru (apps/api/.env): `AI_PROVIDER=mock`, `ANTHROPIC_API_KEY=`, `ANTHROPIC_MODEL=claude-sonnet-5`.
+
+**Prisma (extend):** Material + `modeBelajar/gayaPenulisan/bahasa/sharePublic/shareSlug/updatedAt` + relasi `chapters`,`mindmap`. Model baru **Chapter** (urutan, judul, status pending|ready, kontenMd, isPro) + enum ChapterStatus, **MindMap** (dataJson). Diterapkan via **`prisma db push`** (bukan migrate — migrate dev butuh TTY; migration history belum termasuk perubahan ini, TODO reconcile).
+
+**Module selesai + TERVERIFIKASI (mock):**
+- `materials/` — POST `/materials` (buat + susun bab via AI outline; `tipe:note`=tanpa bab; bab-1 gratis, sisanya isPro) · GET `/materials` · GET `/materials/:id` (with chapters) · DELETE.
+- `chapters/` — POST `/chapters` (tambah bab manual) · POST `/chapters/:id/generate` (isi via AI) · PATCH `/chapters/:id` (autosave editor) · DELETE.
+- Guard JwtAuthGuard (stub demo-user). Uji: buat materi→6 bab→generate bab-1 markdown OK; tersimpan di Supabase.
+
+**Belum (slice berikutnya):** endpoint mindmap/flashcards/quiz/chat/predictions (AiProvider sudah punya methodnya), ingestion nyata (parse file/transkrip), lalu **frontend Note Workspace** (6 tab, editor, timer Fokus, gating Pro, Bagikan/Ekspor). Frontend masih pakai localStorage store — perlu migrasi ke API pada slice frontend.
+
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:
 - Landing **"Mulai Gratis Sekarang" → `/onboarding`** (wizard, tanpa login).

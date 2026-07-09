@@ -10,6 +10,7 @@ Folder ini adalah **memori bersama untuk AI (Claude Code)** yang di-commit ke re
 | `app-spec.md` | Spesifikasi tiap layar versi **MOBILE** (bottom-tab). Sumber `docs/ss/app/`. |
 | `web-spec.md` | Spesifikasi versi **WEB** (landing, auth server OIDC, dashboard sidebar). Sumber `docs/ss/web/`. |
 | `onboarding-spec.md` | Onboarding 20 langkah / 5 fase + radar chart hasil (web). |
+| `note-workspace-spec.md` | **Fitur inti**: upload→AI→catatan berbab, mind map, flashcards, kuis, chat, prediksi soal + gating Free/Pro. Sumber `docs/ss/web/userDashboard/`. |
 | `login-flow.md` | Detail per-screenshot alur login/auth + temuan arsitektur auth (OIDC). |
 | `design-system.md` | Warna, tipografi, komponen, ikon, pola visual. |
 | `decisions.md` | Keputusan stack, arsitektur, dan aturan kerja (mis. sync memory sebelum push). |

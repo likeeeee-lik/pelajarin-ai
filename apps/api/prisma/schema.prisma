@@ -126,13 +126,52 @@ model Material {
   sourceUrl String?
   status    MaterialStatus @default(processing)
   rawText   String?        @db.Text
+  // Konfigurasi generasi AI
+  modeBelajar   String   @default("standar") // kilat | standar | lengkap
+  gayaPenulisan String   @default("santai")  // formal | santai | kreatif | akademis
+  bahasa        String   @default("id")       // id | en | ar | zh
+  // Berbagi
+  sharePublic Boolean @default(false)
+  shareSlug   String? @unique
   createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   user     Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject  Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  chapters Chapter[]
+  mindmap  MindMap?
   notes    Note[]
   cards    Flashcard[]
   quizzes  Quiz[]
+}
+
+enum ChapterStatus {
+  pending
+  ready
+}
+
+model Chapter {
+  id         String        @id @default(cuid())
+  materialId String
+  urutan     Int
+  judul      String
+  status     ChapterStatus @default(pending)
+  kontenMd   String?       @db.Text
+  isPro      Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  material   Material      @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
+}
+
+model MindMap {
+  id         String   @id @default(cuid())
+  materialId String   @unique
+  dataJson   Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
 }
 
 model Note {
