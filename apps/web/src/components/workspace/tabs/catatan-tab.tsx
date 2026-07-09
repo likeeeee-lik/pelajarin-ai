@@ -48,6 +48,7 @@ export function CatatanTab({ material }: { material: Material }) {
       <div className="flex flex-col gap-3">
         {chapters.map((c) => {
           const hasContent = (c.kontenMd?.trim().length ?? 0) > 0;
+          const isReady = c.status === "ready"; // bab manual (Tulis Catatan) langsung bisa diisi
           return (
             <div key={c.id} className="card flex items-center gap-4 p-4">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-ink-600 font-bold text-brand">
@@ -71,13 +72,15 @@ export function CatatanTab({ material }: { material: Material }) {
                 </div>
               </div>
 
-              {hasContent ? (
+              {isReady ? (
                 <button
                   type="button"
                   onClick={() => setOpenId(c.id)}
-                  className="rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold transition hover:bg-ink-600"
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    hasContent ? "border border-ink-500 hover:bg-ink-600" : "bg-brand text-white shadow-brand hover:bg-brand-600"
+                  }`}
                 >
-                  Buka
+                  {hasContent ? "Buka" : "Tulis"}
                 </button>
               ) : (
                 <button
