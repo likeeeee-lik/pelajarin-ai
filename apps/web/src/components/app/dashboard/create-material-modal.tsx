@@ -272,9 +272,21 @@ function SubjectCombobox({ value, onChange }: { value: string; onChange: (id: st
           <div className="absolute z-20 mt-2 w-full rounded-2xl border border-ink-500 bg-ink-800 p-2 shadow-xl">
             <div className="flex items-center gap-2 rounded-xl border border-ink-500/60 bg-ink-700/50 px-3 py-2">
               <Search className="h-4 w-4 text-muted" />
-              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari atau ketik untuk membuat..." className="w-full bg-transparent text-sm outline-none" />
+              <input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && q.trim() && !exact && !createSubject.isPending) {
+                    e.preventDefault();
+                    createSubject.mutate();
+                  }
+                }}
+                placeholder="Cari atau ketik untuk membuat..."
+                className="w-full bg-transparent text-sm outline-none"
+              />
             </div>
-            <div className="mt-2 max-h-48 overflow-y-auto">
+            <div className="mt-2 max-h-56 overflow-y-auto">
               {value ? (
                 <button type="button" onClick={() => { onChange(""); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted hover:bg-ink-700">
                   Tanpa kategori
@@ -286,12 +298,26 @@ function SubjectCombobox({ value, onChange }: { value: string; onChange: (id: st
                   {value === s.id ? <Check className="h-4 w-4 text-brand" /> : null}
                 </button>
               ))}
+
+              {filtered.length === 0 ? (
+                <p className="px-3 py-3 text-center text-sm text-muted">
+                  {q.trim()
+                    ? "Tidak ada mata pelajaran yang ditemukan. Ketik sesuatu untuk membuat"
+                    : "Belum ada mata pelajaran. Ketik untuk membuat."}
+                </p>
+              ) : null}
+
               {q.trim() && !exact ? (
-                <button type="button" onClick={() => createSubject.mutate()} disabled={createSubject.isPending} className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg border border-ink-500/60 px-3 py-2 text-sm font-semibold text-brand hover:bg-ink-700">
-                  <Plus className="h-4 w-4" /> Buat &quot;{q.trim()}&quot;
+                <button
+                  type="button"
+                  onClick={() => createSubject.mutate()}
+                  disabled={createSubject.isPending}
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-brand/50 bg-brand/10 px-3 py-2.5 text-sm font-bold text-brand transition hover:bg-brand/20 disabled:opacity-60"
+                >
+                  {createSubject.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Buat &quot;{q.trim()}&quot;
                 </button>
               ) : null}
-              {filtered.length === 0 && !q.trim() ? <p className="px-3 py-2 text-sm text-muted">Ketik untuk mencari/membuat.</p> : null}
             </div>
           </div>
         </>
@@ -342,13 +368,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 flex items-center justify-between">
+    <div className="block">
+      <div className="mb-1.5 flex items-center justify-between">
         <span className="text-sm font-bold">{label}</span>
         {manage ? <a href="/app/mata-pelajaran" className="text-xs font-semibold text-brand">Kelola mata pelajaran</a> : null}
-      </span>
+      </div>
       {children}
       {hint ? <span className="mt-1 block text-xs text-muted">{hint}</span> : null}
-    </label>
+    </div>
   );
 }
