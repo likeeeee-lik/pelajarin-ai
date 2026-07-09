@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, LogOut, Rocket, User } from "lucide-react";
+import { ChevronLeft, Home, LogOut, Rocket, User } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { signOut } from "@/lib/auth";
 import { MOCK_USER } from "@/lib/mock-user";
@@ -104,6 +104,13 @@ export function Sidebar({
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-white transition hover:bg-ink-600"
               >
                 <User className="h-4 w-4" /> Profil
+              </Link>
+              <Link
+                href="/"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-white transition hover:bg-ink-600"
+              >
+                <Home className="h-4 w-4" /> Beranda
               </Link>
               <button
                 type="button"
