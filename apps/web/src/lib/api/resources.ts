@@ -27,6 +27,8 @@ export const materialsApi = {
   create: (input: CreateMaterialInput) =>
     apiFetch<Material>("/materials", { method: "POST", body: JSON.stringify(input) }),
   upload: (form: FormData) => apiFetch<Material>("/materials/upload", { method: "POST", body: form }),
+  fileUrl: (materialId: string, fileId: string) =>
+    apiFetch<{ url: string | null; name: string; mime: string }>(`/materials/${materialId}/files/${fileId}/url`),
   remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
 };
 

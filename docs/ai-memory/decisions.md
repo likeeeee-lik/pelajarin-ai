@@ -133,7 +133,14 @@ Web API resources+types ditambah: `mindmapApi/flashcardsApi/quizzesApi/chatApi` 
 - **Web**: `create-material-modal` kini simpan `File` asli → untuk file/audio/video kirim **FormData** ke `/materials/upload` (`materialsApi.upload`); YouTube/note tetap JSON. `apiFetch` skip content-type utk FormData.
 - tsconfig API `types:["node","express","multer"]` (untuk `Express.Multer.File`). Uji: upload TXT nyata → rawText terekstrak dari file → 6 bab. Env: `GROQ_MODEL` opsional (default whisper-large-v3).
 
-**Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser; Storage file asli (belum disimpan, hanya diparse). `ANTHROPIC_API_KEY`/`GROQ_API_KEY` kosong (mock) — isi + set provider utk AI/transkrip asli.
+## STORAGE FILE (Supabase) (2026-07-09) — jalur fallback terverifikasi
+`apps/api/src/storage/` (abstraksi seperti AI/ingestion): `StorageProvider` (abstract) → `SupabaseStorageProvider` (`@supabase/supabase-js`, bucket privat `materials` env `SUPABASE_BUCKET`, `createSignedUrl`) / `NoopStorageProvider`. `storage.module.ts` (@Global) pilih via `SUPABASE_URL`+`SUPABASE_SERVICE_KEY` (ada→supabase, else disabled). Client Supabase **lazy** (createClient di getter) agar tak crash saat disabled.
+- Prisma: model **MaterialFile** (materialId, name, path, size, mime) + relasi `Material.files`. db push.
+- Wiring: `MaterialsService.createFromUpload` → setelah ingest, jika `storage.enabled` → upload bytes ke `{sub}/{materialId}/{ts}_{name}` + buat MaterialFile (gagal upload tak batalkan materi). `get()` include `files`. `fileUrl(user,materialId,fileId)` → signed URL. Endpoint **GET `/materials/:id/files/:fileId/url`**.
+- Web: `Material.files: MaterialFile[]`, `materialsApi.fileUrl`. **Dokumen tab** kini daftar file + **Unduh** (signed url→window.open) + **Pratinjau PDF** (iframe signed url); fallback tampil rawText + ajakan isi service key.
+- **Verifikasi (tanpa key = disabled)**: log "Storage: disabled"; upload TXT → 6 bab, files:0, rawText ada, tanpa error. **Aktivasi nyata: user isi `SUPABASE_SERVICE_KEY`** → file tersimpan + preview/unduh jalan.
+
+**Belum:** Bagikan/Ekspor PDF (tombol stub); migrasi Latihan Soal(predictions) ke API; editor rich-text TipTap; gating Pro nyata; PPT/XLSX parser. Kunci kosong (mock/disabled) — isi `ANTHROPIC_API_KEY`(+AI_PROVIDER=claude), `GROQ_API_KEY`, `SUPABASE_SERVICE_KEY` utk AI/transkrip/storage asli.
 
 ## Alur funnel (dikoreksi user 2026-07-08) — onboarding SEBELUM daftar
 Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelnya:

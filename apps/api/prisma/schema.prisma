@@ -140,9 +140,23 @@ model Material {
   subject  Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   chapters Chapter[]
   mindmap  MindMap?
+  files    MaterialFile[]
   notes    Note[]
   cards    Flashcard[]
   quizzes  Quiz[]
+}
+
+model MaterialFile {
+  id         String   @id @default(cuid())
+  materialId String
+  name       String
+  path       String // path di Supabase Storage
+  size       Int
+  mime       String
+  createdAt  DateTime @default(now())
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
 }
 
 enum ChapterStatus {

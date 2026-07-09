@@ -47,6 +47,11 @@ export class MaterialsController {
     return this.materials.get(user, id);
   }
 
+  @Get(":id/files/:fileId/url")
+  fileUrl(@CurrentUser() user: AuthUser, @Param("id") id: string, @Param("fileId") fileId: string) {
+    return this.materials.fileUrl(user, id, fileId);
+  }
+
   @Delete(":id")
   remove(@CurrentUser() user: AuthUser, @Param("id") id: string) {
     return this.materials.remove(user, id);

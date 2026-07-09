@@ -4,6 +4,7 @@ import { AiProvider } from "../ai/ai-provider";
 import type { GenConfig } from "../ai/ai.types";
 import type { AuthUser } from "../auth/jwt.types";
 import { IngestionService, type UploadedFile } from "../ingestion/ingestion.service";
+import { StorageProvider } from "../storage/storage-provider";
 import type { CreateMaterialDto } from "./materials.dto";
 
 @Injectable()
@@ -12,6 +13,7 @@ export class MaterialsService {
     private readonly prisma: PrismaService,
     private readonly ai: AiProvider,
     private readonly ingestion: IngestionService,
+    private readonly storage: StorageProvider,
   ) {}
 
   /** Pastikan profil user ada (FK) — dev/stub bisa memanggil sebelum /me. */
@@ -36,10 +38,39 @@ export class MaterialsService {
   }
 
   /** Buat materi + (untuk sumber non-manual) susun bab via AI, lalu status ready. */
-  /** Buat materi dari unggahan file (parse/transkrip → rawText). */
-  async createFromUpload(user: AuthUser, file: UploadedFile | undefined, dto: CreateMaterialDto) {
+  /** Buat materi dari unggahan file (parse/transkrip → rawText) + simpan file. */
+  async createFromUpload(
+    user: AuthUser,
+    file: (UploadedFile & { size: number }) | undefined,
+    dto: CreateMaterialDto,
+  ) {
     const rawText = file ? await this.ingestion.extractFromUpload(file, dto.tipe) : "";
-    return this.create(user, { ...dto, rawText: rawText || dto.rawText });
+    const material = await this.create(user, { ...dto, rawText: rawText || dto.rawText });
+
+    if (file && this.storage.enabled) {
+      const safe = file.originalname.replace(/[^\w.\-]+/g, "_");
+      const path = `${user.sub}/${material.id}/${Date.now()}_${safe}`;
+      try {
+        await this.storage.upload(path, file.buffer, file.mimetype);
+        await this.prisma.materialFile.create({
+          data: { materialId: material.id, name: file.originalname, path, size: file.size, mime: file.mimetype },
+        });
+        return this.get(user, material.id);
+      } catch (e) {
+        // penyimpanan gagal tidak membatalkan materi (rawText sudah terekstrak)
+        return material;
+      }
+    }
+    return material;
+  }
+
+  /** Signed URL untuk unduh/pratinjau file (download/preview). */
+  async fileUrl(user: AuthUser, materialId: string, fileId: string) {
+    await this.get(user, materialId); // pastikan milik user
+    const file = await this.prisma.materialFile.findFirst({ where: { id: fileId, materialId } });
+    if (!file) throw new NotFoundException("File tidak ditemukan");
+    const url = await this.storage.signedUrl(file.path);
+    return { url, name: file.name, mime: file.mime };
   }
 
   async create(user: AuthUser, dto: CreateMaterialDto) {
@@ -106,6 +137,10 @@ export class MaterialsService {
       include: {
         subject: { select: { id: true, nama: true } },
         chapters: { orderBy: { urutan: "asc" } },
+        files: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, name: true, size: true, mime: true, createdAt: true },
+        },
       },
     });
     if (!material) throw new NotFoundException("Materi tidak ditemukan");

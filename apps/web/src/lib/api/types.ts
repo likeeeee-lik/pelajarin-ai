@@ -33,6 +33,14 @@ export interface MaterialSummary {
   _count: { chapters: number };
 }
 
+export interface MaterialFile {
+  id: string;
+  name: string;
+  size: number;
+  mime: string;
+  createdAt: string;
+}
+
 export interface Material {
   id: string;
   judul: string;
@@ -50,6 +58,7 @@ export interface Material {
   createdAt: string;
   updatedAt: string;
   chapters: Chapter[];
+  files: MaterialFile[];
 }
 
 // ── Fitur AI turunan ────────────────────────────────────────

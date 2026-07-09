@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { HealthController } from "./health/health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
 import { AiModule } from "./ai/ai.module";
+import { StorageModule } from "./storage/storage.module";
 import { UsersModule } from "./users/users.module";
 import { SubjectsModule } from "./subjects/subjects.module";
 import { MaterialsModule } from "./materials/materials.module";
@@ -16,6 +17,7 @@ import { PredictionsModule } from "./predictions/predictions.module";
   imports: [
     PrismaModule,
     AiModule,
+    StorageModule,
     UsersModule,
     SubjectsModule,
     MaterialsModule,
