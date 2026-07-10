@@ -44,6 +44,32 @@ export function markSignedIn() {
   if (!read()) write(true);
 }
 
+/**
+ * Funnel: user menyelesaikan onboarding SEBELUM mendaftar, jadi flag di DB
+ * belum bisa diset. Simpan penanda lokal; AppShell yang mengonsumsinya setelah
+ * login (lalu PATCH /me { onboardingCompleted: true }).
+ */
+const ONBOARDING_KEY = "pelajarin.onboarding.pending";
+
+export function setOnboardingPending() {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, "1");
+  } catch {
+    /* abaikan */
+  }
+}
+
+/** Baca sekali lalu hapus. */
+export function takeOnboardingPending(): boolean {
+  try {
+    const v = localStorage.getItem(ONBOARDING_KEY) === "1";
+    if (v) localStorage.removeItem(ONBOARDING_KEY);
+    return v;
+  } catch {
+    return false;
+  }
+}
+
 export function clearSession() {
   write(false);
 }

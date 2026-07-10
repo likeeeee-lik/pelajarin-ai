@@ -4,7 +4,8 @@
 Panduan lengkap: `docs/logto-setup.md`. Yang dibangun:
 - **Jembatan token**: `app/api/logto/token/route.ts` (getAccessToken utk `LOGTO_API_RESOURCE`). `lib/api/http.ts` kini async — mode `logto` ambil token dari route itu (cache 60s, dibuang saat 401); mode `stub` tetap kirim `"dev"`. `apiFetch` TIDAK pernah dipanggil dari server component (sudah dicek) jadi fetch relatif aman.
 - **sign-in route** hormati `?provider=google|discord` → `directSignIn: {method:"social", target}` (BUKAN string) & `?first_screen=register`.
-- **callback** cek `onboardingCompleted` via `GET /me` → `/onboarding` atau `/app` (fallback `/app` bila API error).
+- **callback** hanya `redirect("/app")`. (Versi awal cek `onboardingCompleted` di callback → LOOP: `onboardingDone` tak pernah ditulis, dan user funnel onboarding SEBELUM daftar. Diperbaiki.)
+- **Gate onboarding**: `PATCH /me { onboardingCompleted }` (baru). Wizard: kalau sudah login → tandai DB → `/app`; kalau belum → `setOnboardingPending()` (localStorage) → `/daftar`. `AppShell` (HANYA mode logto, agar dev stub tak terganggu): profil ada & belum onboarding → konsumsi penanda pending → PATCH true; kalau tak ada penanda → `router.replace("/onboarding")`. Verified: PATCH persist, nama tidak ikut berubah.
 - **Identitas asli**: `GET /me` + `PATCH /me` (baru) di UsersController. BUG DIPERBAIKI: `getProfile` dulu menimpa `nama` dari IdP tiap panggilan → editan user hilang; kini upsert update hanya sinkron email/avatar.
 - `lib/use-session.ts` = sumber tunggal (profil selalu dari `/me`; signedIn: logto→`/me` sukses, stub→flag localStorage `lib/session.ts`). Dipakai sidebar/greeting/nav-auth-button/profil.
 - **Dihapus**: `lib/store.ts` (subjects/materials sudah dead code; profil pindah ke DB via PATCH /me). `MOCK_USER` kini HANYA dipakai halaman streaks (gamifikasi, belum nyata).

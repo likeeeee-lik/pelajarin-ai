@@ -6,6 +6,9 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PHASES, QUESTIONS, activeQuestions } from "@/lib/onboarding/questions";
 import { computeRadar } from "@/lib/onboarding/scoring";
 import type { Answers, Question } from "@/lib/onboarding/types";
+import { meApi } from "@/lib/api/resources";
+import { setOnboardingPending } from "@/lib/session";
+import { useSession } from "@/lib/use-session";
 import { ProgressHeader } from "./progress-header";
 import { PhaseTransition } from "./phase-transition";
 import { QuestionView } from "./question-view";
@@ -46,6 +49,27 @@ export function OnboardingWizard() {
   const current = active[Math.min(index, total - 1)];
 
   const scores = useMemo(() => computeRadar(answers), [answers]);
+  const { signedIn } = useSession();
+
+  /**
+   * Selesai onboarding.
+   * - Sudah masuk  : tandai di DB lalu ke dashboard.
+   * - Belum masuk  : simpan penanda lokal, lanjut ke daftar (funnel).
+   *   AppShell yang menandai di DB setelah login.
+   */
+  async function finishOnboarding() {
+    if (!signedIn) {
+      setOnboardingPending();
+      router.push("/daftar");
+      return;
+    }
+    try {
+      await meApi.update({ onboardingCompleted: true });
+    } catch {
+      /* jangan menahan user bila API bermasalah */
+    }
+    router.push("/app");
+  }
 
   // Auto-advance layar transisi fase.
   useEffect(() => {
@@ -94,15 +118,14 @@ export function OnboardingWizard() {
   }
 
   if (stage === "result") {
-    // Funnel: onboarding dulu → daftar utk simpan profil & masuk app.
-    // TODO(API): POST /onboarding { answers, scores } setelah user terdaftar.
+    // TODO(API): POST /onboarding { answers, scores } untuk menyimpan jawaban.
     return (
       <main className="bg-aurora min-h-screen">
         <ResultScreen
           scores={scores}
           answersCount={total}
-          onStartPro={() => router.push("/daftar")}
-          onSkip={() => router.push("/daftar")}
+          onStartPro={() => void finishOnboarding()}
+          onSkip={() => void finishOnboarding()}
         />
       </main>
     );

@@ -21,6 +21,7 @@ export interface UpdateProfileDto {
   nama?: string;
   bahasaTampilan?: string;
   bahasaGenerasi?: string;
+  onboardingCompleted?: boolean;
 }
 
 @Injectable()
@@ -72,6 +73,9 @@ export class UsersService {
         ...(nama ? { nama } : {}),
         ...(dto.bahasaTampilan ? { bahasaTampilan: dto.bahasaTampilan } : {}),
         ...(dto.bahasaGenerasi ? { bahasaGenerasi: dto.bahasaGenerasi } : {}),
+        ...(typeof dto.onboardingCompleted === "boolean"
+          ? { onboardingDone: dto.onboardingCompleted }
+          : {}),
       },
     });
     return this.getProfile(user);
