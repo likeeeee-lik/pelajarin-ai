@@ -5,6 +5,7 @@ import type {
   ChatResult,
   FlashcardsInput,
   FlashcardsResult,
+  ImageInput,
   MindmapInput,
   MindmapResult,
   OutlineInput,
@@ -29,4 +30,9 @@ export abstract class AiProvider {
   abstract generateQuiz(input: QuizInput): Promise<QuizResult>;
   abstract chat(input: ChatInput): Promise<ChatResult>;
   abstract predictExam(input: PredictExamInput): Promise<PredictExamResult>;
+  /**
+   * Baca seluruh teks dari gambar (foto/scan soal). Kembalikan string kosong
+   * bila provider tak mendukung penglihatan.
+   */
+  abstract readImage(input: ImageInput): Promise<string>;
 }

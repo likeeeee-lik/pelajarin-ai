@@ -9,6 +9,7 @@ import type {
   FlashcardsInput,
   FlashcardsResult,
   GenConfig,
+  ImageInput,
   MindmapInput,
   MindmapResult,
   OutlineInput,
@@ -25,6 +26,9 @@ const BAHASA: Record<string, string> = {
   ar: "Arabic",
   zh: "Mandarin Chinese",
 };
+/** Format gambar yang bisa dibaca Claude. */
+export const SUPPORTED_IMAGE_MIME = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+
 const GAYA: Record<string, string> = {
   formal: "serius & formal",
   santai: "ramah & santai",
@@ -46,6 +50,40 @@ export class ClaudeAiProvider extends AiProvider {
   // lewat ANTHROPIC_MODEL_PREDICT.
   private readonly predictModel = process.env.ANTHROPIC_MODEL_PREDICT ?? "claude-opus-4-8";
 
+  /**
+   * Baca teks dari gambar memakai kemampuan penglihatan Claude.
+   * Dipakai IngestionService untuk foto/scan soal — tanpa pustaka OCR terpisah.
+   */
+  async readImage(input: ImageInput): Promise<string> {
+    const mime = input.mime.toLowerCase();
+    if (!SUPPORTED_IMAGE_MIME.includes(mime)) {
+      this.logger.warn(`Format gambar ${mime} tidak didukung penglihatan Claude`);
+      return "";
+    }
+    const msg = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 8192,
+      system:
+        "Kamu pembaca dokumen. Salin SELURUH teks yang terlihat pada gambar, apa adanya, " +
+        "termasuk nomor soal, pilihan jawaban, rumus, dan judul. Pertahankan urutan dan " +
+        "penomoran. Jangan menjawab soalnya. Jangan menambah komentar apa pun. " +
+        "Bila gambar tak memuat teks, balas string kosong.",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mime as "image/png", data: input.base64 },
+            },
+            { type: "text", text: "Salin semua teks pada gambar ini." },
+          ],
+        },
+      ],
+    });
+    return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+  }
+
   private styleLine(c: GenConfig): string {
     return `Tulis dalam ${BAHASA[c.bahasa] ?? "Bahasa Indonesia"}, gaya ${GAYA[c.gayaPenulisan] ?? "ramah & santai"}, kedalaman "${c.modeBelajar}".`;
   }
@@ -60,15 +98,36 @@ export class ClaudeAiProvider extends AiProvider {
     return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
   }
 
-  /** Ekstrak objek JSON dari balasan model (buang fence / prosa pembungkus). */
-  private extractJson(raw: string): string {
-    let s = raw.trim();
-    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fence) s = fence[1].trim();
+  /**
+   * Ambil objek JSON dari balasan model, dicoba berurutan:
+   *   1) balasan sudah JSON murni
+   *   2) seluruh balasan dibungkus ``` fence
+   *   3) JSON diapit prosa → potong dari `{` pertama ke `}` terakhir
+   *
+   * Fence HARUS diikat ke awal & akhir string. Versi lama memakai regex tanpa
+   * jangkar, sehingga bila JSON-nya sendiri memuat blok kode (mis. kontenMd
+   * berisi ```bash), regex menyambar fence bagian dalam dan merusak JSON.
+   */
+  private parseJsonLoose<T>(raw: string): T {
+    const s = raw.trim();
+    const kandidat: string[] = [s];
+
+    const fence = s.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    if (fence) kandidat.push(fence[1].trim());
+
     const start = s.indexOf("{");
     const end = s.lastIndexOf("}");
-    if (start >= 0 && end > start) s = s.slice(start, end + 1);
-    return s;
+    if (start >= 0 && end > start) kandidat.push(s.slice(start, end + 1));
+
+    let terakhir: unknown;
+    for (const c of kandidat) {
+      try {
+        return JSON.parse(c) as T;
+      } catch (e) {
+        terakhir = e;
+      }
+    }
+    throw terakhir instanceof Error ? terakhir : new Error("JSON tidak dapat diurai");
   }
 
   private async json<T>(system: string, user: string, model = this.model): Promise<T> {
@@ -78,7 +137,7 @@ export class ClaudeAiProvider extends AiProvider {
       model,
     );
     try {
-      return JSON.parse(this.extractJson(raw)) as T;
+      return this.parseJsonLoose<T>(raw);
     } catch (e) {
       this.logger.error(`Gagal parse JSON dari AI: ${(e as Error).message}. Cuplikan: ${raw.slice(0, 200)}`);
       throw e;

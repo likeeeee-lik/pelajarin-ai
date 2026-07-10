@@ -108,6 +108,11 @@ export class MockAiProvider extends AiProvider {
     };
   }
 
+  /** Mock tak bisa melihat gambar. */
+  async readImage(): Promise<string> {
+    return "";
+  }
+
   async predictExam(input: PredictExamInput): Promise<PredictExamResult> {
     // Pilih bank soal contoh dari kata kunci judul/sumber. (Konten contoh —
     // hasil analisis nyata muncul saat AI_PROVIDER=claude.)

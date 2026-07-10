@@ -82,6 +82,15 @@ export interface ChatResult {
   reply: string;
 }
 
+/** Gambar (foto/scan soal) untuk dibaca AI. */
+export interface ImageInput {
+  base64: string;
+  /** image/png | image/jpeg | image/gif | image/webp */
+  mime: string;
+  /** nama berkas, membantu AI memahami konteks */
+  namaBerkas?: string;
+}
+
 export interface PredictedQuestion {
   pertanyaan: string;
   tingkat: Tingkat;

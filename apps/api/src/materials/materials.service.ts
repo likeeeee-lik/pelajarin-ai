@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
@@ -46,6 +46,14 @@ export class MaterialsService {
     dto: CreateMaterialDto,
   ) {
     const rawText = file ? await this.ingestion.extractFromUpload(file, dto.tipe) : "";
+    // Tanpa teks, AI hanya akan menyusun bab dari judul — hasilnya meyakinkan
+    // tapi tak ada hubungannya dengan berkas yang diunggah. Gagal terang-terangan.
+    if (file && !rawText.trim() && !dto.rawText?.trim()) {
+      throw new BadRequestException(
+        `Tidak ada teks yang bisa dibaca dari ${file.originalname}. ` +
+          `Gunakan PDF/DOCX/TXT, foto yang jelas (PNG/JPG), atau tempel teksnya langsung.`,
+      );
+    }
     const material = await this.create(user, { ...dto, rawText: rawText || dto.rawText });
 
     if (file && this.storage.enabled) {

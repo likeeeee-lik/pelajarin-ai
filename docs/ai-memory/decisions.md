@@ -1,5 +1,14 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## 4 BUG ingestion ditemukan dari 1 keluhan user (2026-07-10)
+User unggah FOTO soal MTK "perbandingan" → prediksi malah soal tentang kepanjangan "UTS". Log menyingkap 4 bug:
+1. **Fallback diam-diam**: `sourceText = parts.join() || dto.judul` → tanpa teks, AI memprediksi dari JUDUL. Kegagalan tersembunyi & hasil terlihat meyakinkan. FIX: `BadRequestException` bila ada file tapi nol teks (di predictions DAN materials.createFromUpload). **Aturan: jangan pernah fallback diam-diam ke judul.**
+2. **PDF rusak total**: `pdf-parse` terpasang **v2.4.5** (kelas `PDFParse` + `getText()` + `destroy()`), kode ditulis untuk v1 (`mod.default(buffer)`) → `mod.default is not a function`. Semua unggahan PDF menghasilkan teks kosong. FIX: pakai API v2.
+3. **`extractJson` buatanku sendiri**: regex fence TANPA jangkar `/```(?:json)?\s*([\s\S]*?)```/` menyambar fence BAGIAN DALAM saat kontenMd memuat ```bash → JSON rusak. Materi Laravel gagal generate bab. FIX: `parseJsonLoose()` — coba JSON.parse mentah dulu, lalu fence berjangkar `^...$`, lalu potong `{`..`}`.
+4. **Gambar tak dibaca**: `Format .png belum didukung parser`. FIX: `AiProvider.readImage(ImageInput)` — **penglihatan Claude**, bukan pustaka OCR. IngestionService inject AiProvider (AiModule @Global), batas 5MB, mime png/jpeg/gif/webp. Materi & prediksi sama-sama untung.
+Verified: foto soal PNG → 5 soal perbandingan yang relevan (16,8s) · PDF minimal → soal perbandingan (13,4s) · .pptx → 400 dgn pesan jelas · bab Laravel berisi ```blok kode``` → sukses (dulu gagal).
+SISA: PPT/XLSX belum ada parser (kini ditolak jujur, bukan diam-diam).
+
 ## AI NYATA aktif — Claude (2026-07-10)
 `AI_PROVIDER=claude` + `ANTHROPIC_API_KEY` terisi di `apps/api/.env`. Model: `claude-sonnet-5` (umum), `claude-opus-4-8` (prediksi ujian, via `ANTHROPIC_MODEL_PREDICT`). Kedua nama model diuji langsung ke `api.anthropic.com` → valid.
 **Verified E2E, ketujuh fitur menghasilkan konten nyata** (materi Fotosintesis): outline 4,9s · isi bab **25s** · mindmap 10,4s · flashcards 4,6s · kuis 5,9s · chat 9,9s · prediksi (Opus) 10,9s.

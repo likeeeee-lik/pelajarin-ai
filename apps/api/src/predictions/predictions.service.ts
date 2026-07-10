@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma, type ExamType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiProvider } from "../ai/ai-provider";
@@ -129,12 +129,23 @@ export class PredictionsService {
       meta.push({ name: f.originalname, path, size: f.size, mime: f.mimetype });
     }
 
-    const sourceText = parts.join("\n\n") || dto.judul;
+    // Jangan pernah diam-diam memakai judul sebagai sumber: AI akan memprediksi
+    // soal tentang judulnya, bukan tentang soal yang diunggah — dan hasilnya
+    // terlihat meyakinkan padahal salah. Lebih baik gagal terang-terangan.
+    const sourceText = parts.join("\n\n");
+    if (files.length > 0 && !sourceText.trim()) {
+      const nama = files.map((f) => f.originalname).join(", ");
+      throw new BadRequestException(
+        `Tidak ada teks yang bisa dibaca dari ${nama}. ` +
+          `Pastikan file berupa PDF/DOCX/TXT, atau foto soal yang jelas (PNG/JPG).`,
+      );
+    }
+
     return this.persist(user, {
       judul: dto.judul,
       tipe: dto.tipe,
       subjectId: dto.subjectId,
-      sourceText,
+      sourceText: sourceText || dto.judul, // hanya bila memang tak ada file
       sourceFiles: meta,
     });
   }
