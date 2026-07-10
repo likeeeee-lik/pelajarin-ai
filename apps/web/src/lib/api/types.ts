@@ -120,6 +120,7 @@ export interface Profile {
   id: string;
   nama: string;
   email: string;
+  emailVerified: boolean;
   avatarUrl: string | null;
   plan: "free" | "pro" | "institusi";
   bahasaTampilan: string;

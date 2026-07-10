@@ -1,5 +1,17 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Verifikasi email + lupa password + OTP (2026-07-10)
+Mail server dummy: **MailDev** (`pnpm --filter @pelajarin/api mail` → SMTP 1025, kotak masuk http://localhost:1080). REST API-nya **`/api/email`** (bukan `/email` seperti MailDev v2) — sempat menyesatkan uji.
+Dibangun di atas **SMTP standar** (nodemailer), bukan API MailDev → pindah ke Resend/Mailgun/SES cukup ganti env. Pola provider spt AI/Storage: `MailProvider` abstract + `SmtpMailProvider` + `ConsoleMailProvider` (fallback bila `SMTP_HOST` kosong: email dicetak ke log, fitur tetap jalan).
+- Schema: `Profile.emailVerified`, model `VerificationCode` (email, type enum verify_email|reset_password, **codeHash** SHA-256 — kode asli tak pernah disimpan, expiresAt, attempts, usedAt).
+- `VerificationService`: OTP 6 digit via `crypto.randomInt` (bukan Math.random), TTL 10 mnt, maks 5 percobaan, kode lama dibatalkan saat terbit baru, cooldown kirim-ulang 60 dtk.
+- Endpoint: `POST /auth/verify/{request,confirm}`, `POST /auth/password/{forgot,reset}`. **forgot SELALU balas pesan sama** (terdaftar atau tidak) & tak mengirim email ke alamat asing → tak bisa dipakai memetakan siapa punya akun. Reset sukses ⇒ `emailVerified=true` (terbukti kuasai inbox) + langsung login.
+- Env: `SMTP_*`, `MAIL_FROM`, `REQUIRE_EMAIL_VERIFICATION` (default **false** agar akun lama tak terkunci; set true untuk memaksa).
+- Web: BFF `/api/auth/{verify/request,verify/confirm,forgot,reset}` (helper `forward.ts`; reset menaruh cookie sesi). Halaman **/verifikasi**, **/lupa-password**, **/reset-password** + tautan "Lupa password?" dikembalikan (dulu 404). Banner kuning "email belum diverifikasi" di AppShell. `/me` kini memuat `emailVerified`.
+- Template email HTML: tabel + gaya sebaris (Outlook/Gmail lawas abaikan `<style>`/flexbox), nama pengguna di-escape agar tak bisa suntik HTML.
+- Verified E2E (API & web): kode salah ditolak, sekali pakai, **kode verify tak bisa dipakai utk reset**, email asing tak dikirimi, password lama gagal setelah reset, `/me.emailVerified=true`.
+BELUM: ganti password dari halaman profil, refresh token, MFA, OAuth.
+
 ## Auth SENDIRI (email+password) — Logto dinonaktifkan (2026-07-10)
 User memilih buang Logto. Alasan: halaman login Logto terasa asing, kode verifikasi email merepotkan, dan fitur yg dibutuhkan berbayar — **Custom JWT (klaim email/nama di access token) = Pro $24/bln**, **Collect user profile = Pro**, **Bring your own UI = Pro**. Free hanya: password sign-in, 3 social connector, logo/favicon. (Diverifikasi dari logto.io/pricing, bukan tebakan.)
 Logto TIDAK dihapus — tetap hidup di balik `AUTH_MODE=logto` (guard, route /api/logto/*, LogtoAdmin M2M) supaya bisa dikembalikan.

@@ -7,6 +7,7 @@ import { meApi } from "@/lib/api/resources";
 import { markSignedIn, takeOnboardingPending } from "@/lib/session";
 import { useSession } from "@/lib/use-session";
 import { Sidebar } from "./sidebar";
+import { VerifyBanner } from "./verify-banner";
 
 const MODE = process.env.NEXT_PUBLIC_AUTH_MODE ?? "stub";
 
@@ -43,7 +44,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="bg-app flex min-h-screen">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <main className="min-w-0 flex-1 px-5 py-6 sm:px-8 sm:py-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <VerifyBanner />
+          {children}
+        </div>
       </main>
     </div>
   );

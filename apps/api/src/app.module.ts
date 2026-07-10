@@ -4,6 +4,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
 import { LogtoModule } from "./logto/logto.module";
+import { MailModule } from "./mail/mail.module";
 import { StorageModule } from "./storage/storage.module";
 import { UsersModule } from "./users/users.module";
 import { SubjectsModule } from "./subjects/subjects.module";
@@ -19,6 +20,7 @@ import { StatsModule } from "./stats/stats.module";
 @Module({
   imports: [
     PrismaModule,
+    MailModule,
     AuthModule,
     AiModule,
     LogtoModule,

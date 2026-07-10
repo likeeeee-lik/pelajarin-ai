@@ -86,6 +86,27 @@ export async function signUpWithEmail(input: {
   });
 }
 
+// ── Verifikasi email & reset password (mode local) ──────────
+
+/** Kirim ulang kode verifikasi ke email. */
+export function requestVerificationCode(email: string): Promise<AuthOutcome> {
+  return postAuth("/api/auth/verify/request", { email });
+}
+
+export function confirmVerificationCode(email: string, code: string): Promise<AuthOutcome> {
+  return postAuth("/api/auth/verify/confirm", { email, code });
+}
+
+/** Balasan selalu sukses — server sengaja tak membocorkan keberadaan akun. */
+export function requestPasswordReset(email: string): Promise<AuthOutcome> {
+  return postAuth("/api/auth/forgot", { email });
+}
+
+/** Berhasil = langsung masuk (cookie sesi diset oleh server). */
+export function resetPassword(email: string, code: string, password: string): Promise<AuthOutcome> {
+  return postAuth("/api/auth/reset", { email, code, password });
+}
+
 export function completeConsent() {
   // Consent hanya ada di mode stub (Logto meng-host consent-nya sendiri).
   window.location.href = `/app`;

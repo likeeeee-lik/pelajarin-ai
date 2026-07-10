@@ -11,6 +11,7 @@ export interface ProfileDto {
   id: string;
   nama: string;
   email: string;
+  emailVerified: boolean;
   avatarUrl: string | null;
   plan: "free" | "pro" | "institusi";
   bahasaTampilan: string;
@@ -62,6 +63,7 @@ export class UsersService {
       id: p.id,
       nama: p.nama,
       email: p.email,
+      emailVerified: p.emailVerified,
       avatarUrl: p.avatarUrl,
       plan: p.plan,
       bahasaTampilan: p.bahasaTampilan,

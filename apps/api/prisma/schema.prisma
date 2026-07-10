@@ -1,7 +1,6 @@
 // Skema database Pelajarin.ai (Postgres @ Supabase).
-// STATUS: dokumen sumber-kebenaran. Belum di-wire (belum `prisma generate`/migrate)
-// sampai kredensial Supabase (DATABASE_URL) tersedia. Lihat docs/RENCANA-WEB.md.
-// Auth = Logto (OIDC); `Profile.id` = Logto subject (sub).
+// Auth: lokal (email + password, `Profile.passwordHash`) — `Profile.id` = cuid.
+// Mode Logto masih didukung lewat AUTH_MODE=logto; di sana `Profile.id` = sub.
 
 generator client {
   provider = "prisma-client-js"
@@ -54,6 +53,7 @@ model Profile {
   nama           String
   // Hanya untuk auth lokal (scrypt). null bila akun dibuat lewat Logto/stub.
   passwordHash   String?
+  emailVerified  Boolean  @default(false)
   avatarUrl      String?
   plan           Plan     @default(free)
   bahasaTampilan String   @default("id")
@@ -301,4 +301,24 @@ model Referral {
   referredBy String?
   createdAt  DateTime @default(now())
   user       Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum VerificationType {
+  verify_email
+  reset_password
+}
+
+/// Kode OTP sekali pakai. `codeHash` = SHA-256 dari kode (kode asli tidak pernah
+/// disimpan). Dibatasi masa berlaku + jumlah percobaan.
+model VerificationCode {
+  id        String           @id @default(cuid())
+  email     String
+  type      VerificationType
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int              @default(0)
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([email, type])
 }

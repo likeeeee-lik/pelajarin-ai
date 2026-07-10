@@ -1,7 +1,16 @@
-import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { MailProvider } from "../mail/mail-provider";
+import { resetPasswordTemplate, verifyEmailTemplate } from "../mail/templates";
 import { checkPasswordStrength, hashPassword, verifyPassword } from "./password";
 import { signLocalToken } from "./local-jwt";
+import { CODE_TTL_MINUTES, VerificationService } from "./verification.service";
 
 export interface RegisterDto {
   nama?: string;
@@ -15,8 +24,24 @@ export interface LoginDto {
 
 export interface AuthResult {
   token: string;
-  user: { id: string; nama: string; email: string };
+  user: { id: string; nama: string; email: string; emailVerified: boolean };
 }
+
+export interface VerifyDto {
+  email?: string;
+  code?: string;
+}
+export interface ResetDto {
+  email?: string;
+  code?: string;
+  password?: string;
+}
+
+/** Balasan seragam untuk endpoint yang tak boleh membocorkan keberadaan akun. */
+const GENERIC_SENT = {
+  ok: true,
+  message: "Jika email terdaftar, kami sudah mengirimkan kode ke sana.",
+};
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -50,15 +75,36 @@ function clearAttempts(key: string) {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(AuthService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailProvider,
+    private readonly verification: VerificationService,
+  ) {}
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
   }
 
-  private async issue(user: { id: string; nama: string; email: string }): Promise<AuthResult> {
+  private async issue(user: {
+    id: string;
+    nama: string;
+    email: string;
+    emailVerified: boolean;
+  }): Promise<AuthResult> {
     const token = await signLocalToken({ sub: user.id, email: user.email, name: user.nama });
     return { token, user };
+  }
+
+  /** Kirim kode; kegagalan email tidak boleh menggagalkan pendaftaran. */
+  private async kirimKodeVerifikasi(email: string, nama: string) {
+    try {
+      const code = await this.verification.issue(email, "verify_email");
+      await this.mail.send(verifyEmailTemplate(email, nama, code, CODE_TTL_MINUTES));
+    } catch (e) {
+      this.logger.error(`Gagal mengirim kode verifikasi ke ${email}: ${(e as Error).message}`);
+    }
   }
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -76,8 +122,9 @@ export class AuthService {
 
     const profile = await this.prisma.profile.create({
       data: { email, nama, passwordHash: await hashPassword(password) },
-      select: { id: true, nama: true, email: true },
+      select: { id: true, nama: true, email: true, emailVerified: true },
     });
+    await this.kirimKodeVerifikasi(email, nama);
     return this.issue(profile);
   }
 
@@ -99,7 +146,92 @@ export class AuthService {
       throw new UnauthorizedException("Email atau password salah");
     }
 
+    if (process.env.REQUIRE_EMAIL_VERIFICATION === "true" && !profile.emailVerified) {
+      throw new ForbiddenException("Email belum diverifikasi");
+    }
+
     clearAttempts(email);
-    return this.issue({ id: profile.id, nama: profile.nama, email: profile.email });
+    return this.issue({
+      id: profile.id,
+      nama: profile.nama,
+      email: profile.email,
+      emailVerified: profile.emailVerified,
+    });
+  }
+
+  // ── Verifikasi email ──────────────────────────────────────
+
+  /** Kirim ulang kode. Balasan seragam agar tak membocorkan keberadaan akun. */
+  async requestVerification(email0: string) {
+    const email = this.normalizeEmail(email0 ?? "");
+    if (!EMAIL_RE.test(email)) throw new BadRequestException("Format email tidak valid");
+
+    const profile = await this.prisma.profile.findUnique({ where: { email } });
+    if (profile && !profile.emailVerified && !(await this.verification.inCooldown(email, "verify_email"))) {
+      await this.kirimKodeVerifikasi(email, profile.nama);
+    }
+    return GENERIC_SENT;
+  }
+
+  async confirmVerification(dto: VerifyDto) {
+    const email = this.normalizeEmail(dto.email ?? "");
+    const code = (dto.code ?? "").trim();
+    if (!email || !code) throw new BadRequestException("Email dan kode wajib diisi");
+
+    const res = await this.verification.consume(email, "verify_email", code);
+    if (!res.ok) throw new BadRequestException(this.pesanGagal(res.reason));
+
+    await this.prisma.profile.update({ where: { email }, data: { emailVerified: true } });
+    return { ok: true };
+  }
+
+  // ── Lupa / atur ulang password ────────────────────────────
+
+  /**
+   * SELALU balas sama, terdaftar atau tidak. Kalau kita membedakan balasan,
+   * halaman ini berubah jadi alat untuk memeriksa email siapa saja yang punya akun.
+   */
+  async forgotPassword(email0: string) {
+    const email = this.normalizeEmail(email0 ?? "");
+    if (!EMAIL_RE.test(email)) return GENERIC_SENT;
+
+    const profile = await this.prisma.profile.findUnique({ where: { email } });
+    if (profile && !(await this.verification.inCooldown(email, "reset_password"))) {
+      try {
+        const code = await this.verification.issue(email, "reset_password");
+        await this.mail.send(resetPasswordTemplate(email, profile.nama, code, CODE_TTL_MINUTES));
+      } catch (e) {
+        this.logger.error(`Gagal mengirim kode reset ke ${email}: ${(e as Error).message}`);
+      }
+    }
+    return GENERIC_SENT;
+  }
+
+  async resetPassword(dto: ResetDto): Promise<AuthResult> {
+    const email = this.normalizeEmail(dto.email ?? "");
+    const code = (dto.code ?? "").trim();
+    const password = dto.password ?? "";
+
+    if (!email || !code) throw new BadRequestException("Email dan kode wajib diisi");
+    const weak = checkPasswordStrength(password);
+    if (weak) throw new BadRequestException(weak);
+
+    const res = await this.verification.consume(email, "reset_password", code);
+    if (!res.ok) throw new BadRequestException(this.pesanGagal(res.reason));
+
+    const profile = await this.prisma.profile.update({
+      where: { email },
+      // Berhasil memakai kode dari inbox = terbukti menguasai email itu.
+      data: { passwordHash: await hashPassword(password), emailVerified: true },
+      select: { id: true, nama: true, email: true, emailVerified: true },
+    });
+    clearAttempts(email);
+    return this.issue(profile);
+  }
+
+  private pesanGagal(reason: "invalid" | "expired" | "too_many_attempts"): string {
+    if (reason === "expired") return "Kode sudah kedaluwarsa. Minta kode baru.";
+    if (reason === "too_many_attempts") return "Terlalu banyak percobaan. Minta kode baru.";
+    return "Kode salah";
   }
 }
