@@ -21,12 +21,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => markSignedIn(), []);
 
   /**
-   * Gate onboarding (hanya mode logto; di stub dev dibiarkan agar tak mengganggu).
+   * Gate onboarding (aktif saat auth nyata; di stub dev dibiarkan agar tak mengganggu).
    * - Wizard anonim (funnel) meninggalkan penanda → tandai selesai di DB.
    * - Login langsung tanpa pernah onboarding → arahkan ke wizard.
    */
   useEffect(() => {
-    if (MODE !== "logto" || !profile || profile.onboardingCompleted) return;
+    if (MODE === "stub" || !profile || profile.onboardingCompleted) return;
     if (takeOnboardingPending()) {
       meApi
         .update({ onboardingCompleted: true })

@@ -14,9 +14,12 @@ export class ApiError extends Error {
 /**
  * Token auth untuk API.
  * - stub  : guard API menerima token apa pun sebagai demo-user → kirim "dev".
- * - logto : ambil access token dari sesi (route /api/logto/token), cache singkat
- *           di memori agar tidak memanggil tiap request.
+ * - local : token JWT sendiri, disimpan di cookie httpOnly (route /api/auth/token).
+ * - logto : access token dari sesi Logto (route /api/logto/token).
+ * Keduanya di-cache singkat di memori agar tidak memanggil route tiap request.
  */
+const TOKEN_URL = MODE === "logto" ? "/api/logto/token" : "/api/auth/token";
+
 let tokenCache: { token: string; exp: number } | null = null;
 const TOKEN_TTL_MS = 60_000;
 
@@ -25,12 +28,12 @@ export function clearTokenCache() {
 }
 
 async function authToken(): Promise<string> {
-  if (MODE !== "logto") return "dev";
+  if (MODE === "stub") return "dev";
 
   const now = Date.now();
   if (tokenCache && now < tokenCache.exp) return tokenCache.token;
 
-  const res = await fetch("/api/logto/token", { cache: "no-store" });
+  const res = await fetch(TOKEN_URL, { cache: "no-store" });
   if (!res.ok) {
     tokenCache = null;
     throw new ApiError(401, "Sesi berakhir. Silakan masuk lagi.");

@@ -48,9 +48,12 @@ enum AiPersona {
 }
 
 model Profile {
-  id             String   @id // Logto subject (sub)
+  // Auth lokal: cuid. Auth Logto: subject (sub) dari token.
+  id             String   @id @default(cuid())
   email          String   @unique
   nama           String
+  // Hanya untuk auth lokal (scrypt). null bila akun dibuat lewat Logto/stub.
+  passwordHash   String?
   avatarUrl      String?
   plan           Plan     @default(free)
   bahasaTampilan String   @default("id")

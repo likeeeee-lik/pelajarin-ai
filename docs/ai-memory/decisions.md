@@ -1,5 +1,23 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Auth SENDIRI (email+password) — Logto dinonaktifkan (2026-07-10)
+User memilih buang Logto. Alasan: halaman login Logto terasa asing, kode verifikasi email merepotkan, dan fitur yg dibutuhkan berbayar — **Custom JWT (klaim email/nama di access token) = Pro $24/bln**, **Collect user profile = Pro**, **Bring your own UI = Pro**. Free hanya: password sign-in, 3 social connector, logo/favicon. (Diverifikasi dari logto.io/pricing, bukan tebakan.)
+Logto TIDAK dihapus — tetap hidup di balik `AUTH_MODE=logto` (guard, route /api/logto/*, LogtoAdmin M2M) supaya bisa dikembalikan.
+
+**Bentuk sekarang** (`AUTH_MODE=local` di api & `NEXT_PUBLIC_AUTH_MODE=local` di web — harus sama):
+- Schema: `Profile.passwordHash String?` + `id @default(cuid())` (dulu = Logto sub). `prisma db push` sudah jalan.
+- `auth/password.ts`: **scrypt** bawaan Node (bukan bcrypt/argon2 — hindari kompilasi native di Windows), salt 16B, keylen 64, `timingSafeEqual`. Aturan: min 8 char, ada huruf+angka.
+- `auth/local-jwt.ts`: JWT **HS256** via `jose` (sudah terpasang), iss=pelajarin, aud=pelajarin-api, TTL 7d, secret `AUTH_JWT_SECRET` (min 32 char, dicek saat sign/verify).
+- `auth/auth.service.ts`: register/login. **DUMMY_HASH** dipakai saat email tak ditemukan agar scrypt tetap jalan → durasi respons tak membocorkan email mana yg terdaftar. Pesan error login disamakan ("Email atau password salah"). Rate limit in-memory 8×/10 menit per email.
+- `POST /auth/register`, `POST /auth/login` (publik, di luar JwtAuthGuard).
+- Guard punya 3 mode eksplisit: local | logto | stub. stub di `NODE_ENV=production` → dipaksa "local" (tanpa secret → semua 401 = fail-closed).
+- **Web BFF**: `/api/auth/{register,login,logout,token}`. Token JWT disimpan di cookie **httpOnly** (`pelajarin_token`, sameSite lax, secure di prod, 7d) — JS browser tak bisa membacanya. `http.ts` mengambil token dari `/api/auth/token` (cache 60s). Gate `/app` di layout membaca cookie → redirect `/masuk`.
+- Form `/masuk` & `/daftar` sudah ada → disambung + tampilkan pesan error server & status pending. Tombol OAuth & tautan "Lupa password?" DISEMBUNYIKAN di mode local (belum ada; tautan itu 404).
+- `useSession`: signedIn = `/me` sukses (kecuali stub). Gate onboarding kini aktif di local juga.
+- Verified E2E 10/10: /app tanpa sesi→307 /masuk; daftar→cookie HttpOnly; token; /app 200; `/me` mengembalikan **nama yg didaftarkan**; email duplikat 400; login salah=401 pesan sama dgn email tak ada; logout hapus cookie.
+
+**BELUM ADA (utang)**: verifikasi email, lupa password, ganti password, login Google/Discord, refresh token/rotasi, MFA. Rate limit hanya per-proses (hilang saat restart, tak berlaku multi-instance).
+
 ## Dev pakai Turbopack (2026-07-10)
 Klik pertama tiap rute di sidebar terasa "tidak jalan" — ternyata kompilasi on-demand webpack: `/app/mata-pelajaran` **43s**, latihan-soal 17,5s, streaks 16,9s (klik berikutnya 0,26s). Bukan bug.
 Next 15.5 + next.config polos (hanya reactStrictMode + transpilePackages) → `next dev --turbopack` aman. Diukur setelah `rm -rf .next`: semua rute **0,4–1,7s** (landing 8,4s sekali di awal). Tak ada error/warning; gate auth utuh (`/app` 307, `/api/logto/token` 401). Log Next mencetak `Compiled /app/...` walau balasannya 307 → halaman benar-benar terkompilasi, angkanya sahih.

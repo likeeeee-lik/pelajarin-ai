@@ -1,16 +1,15 @@
 "use client";
 
 /**
- * Lapisan auth web. Dua mode (lihat .env NEXT_PUBLIC_AUTH_MODE):
- * - "stub"  : simulasi flow tanpa server (untuk bangun UI sebelum Logto siap).
- *             Meniru urutan Logto: sign-in → consent → app.
- * - "logto" : redirect ke route Logto asli (di-wire saat kredensial tersedia).
- *
- * Saat pindah ke Logto, cukup ganti implementasi ke SDK @logto/next tanpa
- * mengubah komponen UI.
+ * Lapisan auth web (lihat .env NEXT_PUBLIC_AUTH_MODE):
+ * - "local" : auth sendiri (email + password). Form mengirim ke route
+ *             /api/auth/*, token disimpan di cookie httpOnly oleh server Next.
+ * - "logto" : redirect ke Logto (OIDC). Dipertahankan agar bisa dipakai lagi.
+ * - "stub"  : simulasi tanpa server, untuk membangun UI.
  */
 
 import { clearSession } from "./session";
+import { clearTokenCache } from "./api/http";
 
 export type OAuthProvider = "google" | "discord";
 
@@ -18,6 +17,30 @@ const MODE = process.env.NEXT_PUBLIC_AUTH_MODE ?? "stub";
 
 export function isLogtoMode() {
   return MODE === "logto";
+}
+export function isLocalMode() {
+  return MODE === "local";
+}
+
+/** Hasil operasi auth; `message` diisi saat gagal agar form bisa menampilkannya. */
+export type AuthOutcome = { ok: true } | { ok: false; message: string };
+
+async function postAuth(path: string, body: unknown): Promise<AuthOutcome> {
+  try {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      return { ok: false, message: data?.message ?? "Terjadi kesalahan. Coba lagi." };
+    }
+    clearTokenCache(); // token baru → jangan pakai cache lama
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Tidak dapat terhubung ke server." };
+  }
 }
 
 export function signInWith(provider: OAuthProvider, flow?: "register") {
@@ -31,24 +54,36 @@ export function signInWith(provider: OAuthProvider, flow?: "register") {
   window.location.href = `/consent?provider=${provider}${q}`;
 }
 
-export function signInWithEmail(_email: string, _password: string) {
+export async function signInWithEmail(email: string, password: string): Promise<AuthOutcome> {
   if (isLogtoMode()) {
     window.location.href = `/api/logto/sign-in`;
-    return;
+    return { ok: true };
   }
-  window.location.href = `/consent?provider=email`;
+  if (!isLocalMode()) {
+    window.location.href = `/consent?provider=email`;
+    return { ok: true };
+  }
+  return postAuth("/api/auth/login", { email, password });
 }
 
-export function signUpWithEmail(_input: {
+export async function signUpWithEmail(input: {
   name: string;
   email: string;
   password: string;
-}) {
+}): Promise<AuthOutcome> {
   if (isLogtoMode()) {
     window.location.href = `/api/logto/sign-in?first_screen=register`;
-    return;
+    return { ok: true };
   }
-  window.location.href = `/consent?provider=email&flow=register`;
+  if (!isLocalMode()) {
+    window.location.href = `/consent?provider=email&flow=register`;
+    return { ok: true };
+  }
+  return postAuth("/api/auth/register", {
+    nama: input.name,
+    email: input.email,
+    password: input.password,
+  });
 }
 
 export function completeConsent() {
@@ -56,11 +91,15 @@ export function completeConsent() {
   window.location.href = `/app`;
 }
 
-export function signOut() {
+export async function signOut() {
   if (isLogtoMode()) {
     window.location.href = `/api/logto/sign-out`;
     return;
   }
-  clearSession(); // stub: hapus penanda sesi lalu ke beranda
+  if (isLocalMode()) {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    clearTokenCache();
+  }
+  clearSession(); // penanda stub
   window.location.href = `/`;
 }
