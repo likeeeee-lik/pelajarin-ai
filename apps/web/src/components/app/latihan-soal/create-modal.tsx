@@ -196,7 +196,7 @@ export function CreatePredictionModal({ onClose }: { onClose: () => void }) {
 
             {create.isError ? (
               <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">
-                Gagal memproses. Coba lagi.
+                {create.error instanceof Error ? create.error.message : "Gagal memproses. Coba lagi."}
               </p>
             ) : null}
 

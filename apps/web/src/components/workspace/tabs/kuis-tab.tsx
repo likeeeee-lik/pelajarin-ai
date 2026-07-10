@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Check, HelpCircle, Loader2, RotateCcw, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ClipboardList, HelpCircle, Loader2, Plus, RotateCcw, Sparkles, X } from "lucide-react";
 import { quizzesApi } from "@/lib/api/resources";
 import type { Material, Quiz, QuizQuestion, QuizType } from "@/lib/api/types";
 import { ChapterPicker } from "../chapter-picker";
@@ -20,9 +20,16 @@ const COUNTS = [
 ];
 
 const norm = (s: string) => s.trim().toLowerCase();
+const tanggal = (iso: string) =>
+  new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+
+type Phase = "list" | "config" | "playing" | "result";
 
 export function KuisTab({ material }: { material: Material }) {
-  const [phase, setPhase] = useState<"config" | "playing" | "result">("config");
+  const qc = useQueryClient();
+  const list = useQuery({ queryKey: ["quizzes", material.id], queryFn: () => quizzesApi.list(material.id) });
+
+  const [phase, setPhase] = useState<Phase | null>(null);
   const [types, setTypes] = useState<QuizType[]>(["pilihan_ganda"]);
   const [count, setCount] = useState(5);
   const [chapterIds, setChapterIds] = useState<string[]>(material.chapters.map((c) => c.id));
@@ -32,11 +39,26 @@ export function KuisTab({ material }: { material: Material }) {
   const gen = useMutation({
     mutationFn: () => quizzesApi.generate(material.id, { count, types, chapterIds }),
     onSuccess: (q) => {
-      setQuiz(q);
-      setAnswers({});
-      setPhase("playing");
+      qc.invalidateQueries({ queryKey: ["quizzes", material.id] });
+      mulai(q);
     },
   });
+
+  const simpanSkor = useMutation({
+    mutationFn: (skor: number) => quizzesApi.saveScore(quiz!.id, skor),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["quizzes", material.id] }),
+  });
+
+  /** Kerjakan kuis dari data yang SUDAH ada — tanpa panggilan AI. */
+  function mulai(q: Quiz) {
+    setQuiz(q);
+    setAnswers({});
+    setPhase("playing");
+  }
+
+  const quizzes = list.data ?? [];
+  // Fase awal: ada riwayat → tampilkan daftar; belum ada → langsung konfigurasi.
+  const fase: Phase = phase ?? (quizzes.length > 0 ? "list" : "config");
 
   const questions: QuizQuestion[] = quiz?.soalJson.questions ?? [];
   const score = questions.reduce((s, q, i) => (norm(answers[i] ?? "") === norm(q.jawaban) ? s + 1 : s), 0);
@@ -44,7 +66,60 @@ export function KuisTab({ material }: { material: Material }) {
   const toggleType = (t: QuizType) =>
     setTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
-  if (phase === "config") {
+  if (list.isLoading) {
+    return <div className="grid h-[50vh] place-items-center text-muted"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  // ── Daftar riwayat ────────────────────────────────────────
+  if (fase === "list") {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold">Kuis</h2>
+            <p className="text-sm text-muted">{quizzes.length} kuis tersimpan · kerjakan ulang tanpa biaya AI</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPhase("config")}
+            className="flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-brand transition hover:bg-brand-600"
+          >
+            <Plus className="h-4 w-4" /> Kuis Baru
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {quizzes.map((q) => {
+            const total = q.soalJson.questions.length;
+            return (
+              <div key={q.id} className="card flex items-center gap-4 p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand/15 text-brand">
+                  <ClipboardList className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">{total} soal</p>
+                  <p className="text-xs text-muted">
+                    {tanggal(q.createdAt)}
+                    {q.skor !== null ? ` · skor terakhir ${q.skor}/${total}` : " · belum pernah dikerjakan"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => mulai(q)}
+                  className="shrink-0 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold transition hover:bg-ink-600"
+                >
+                  Kerjakan
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Konfigurasi (memanggil AI) ────────────────────────────
+  if (fase === "config") {
     return (
       <div className="card mx-auto max-w-lg p-8">
         <div className="text-center">
@@ -78,24 +153,48 @@ export function KuisTab({ material }: { material: Material }) {
 
         <div className="mt-5"><ChapterPicker chapters={material.chapters} selected={chapterIds} onChange={setChapterIds} /></div>
 
-        <button type="button" onClick={() => gen.mutate()} disabled={gen.isPending || types.length === 0 || chapterIds.length === 0} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3.5 font-bold text-white shadow-brand disabled:opacity-50">
+        <p className="mt-4 flex items-center gap-2 text-xs text-muted">
+          <Sparkles className="h-3.5 w-3.5 text-brand" /> Membuat kuis baru memanggil AI. Kuis lama tetap tersimpan.
+        </p>
+
+        <button type="button" onClick={() => gen.mutate()} disabled={gen.isPending || types.length === 0 || chapterIds.length === 0} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3.5 font-bold text-white shadow-brand disabled:opacity-50">
           {gen.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : null} Mulai Quiz ({count} soal)
         </button>
+
+        {gen.isError ? (
+          <p className="mt-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">
+            {gen.error instanceof Error ? gen.error.message : "Gagal membuat kuis."}
+          </p>
+        ) : null}
+
+        {quizzes.length > 0 ? (
+          <button type="button" onClick={() => setPhase("list")} className="mt-3 w-full text-sm text-muted transition hover:text-white">
+            Kembali ke daftar kuis
+          </button>
+        ) : null}
       </div>
     );
   }
 
-  const reviewing = phase === "result";
+  // ── Mengerjakan / hasil ───────────────────────────────────
+  const reviewing = fase === "result";
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold">Kuis</h2>
         {reviewing ? (
           <span className="rounded-full bg-brand/15 px-3 py-1 font-bold text-brand">Skor {score}/{questions.length}</span>
         ) : null}
-        <button type="button" onClick={() => setPhase("config")} className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold hover:bg-ink-600">
-          <RotateCcw className="h-4 w-4" /> Ulangi
-        </button>
+        <div className="flex items-center gap-2">
+          {reviewing ? (
+            <button type="button" onClick={() => { setAnswers({}); setPhase("playing"); }} className="flex items-center gap-2 rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold hover:bg-ink-600">
+              <RotateCcw className="h-4 w-4" /> Kerjakan Ulang
+            </button>
+          ) : null}
+          <button type="button" onClick={() => setPhase("list")} className="rounded-xl border border-ink-500 px-4 py-2 text-sm font-semibold hover:bg-ink-600">
+            Daftar Kuis
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -144,8 +243,15 @@ export function KuisTab({ material }: { material: Material }) {
       </div>
 
       {!reviewing ? (
-        <button type="button" onClick={() => setPhase("result")} className="mt-6 w-full rounded-2xl bg-brand px-6 py-3.5 font-bold text-white shadow-brand">
-          Selesai & Lihat Skor
+        <button
+          type="button"
+          onClick={() => {
+            setPhase("result");
+            if (quiz) simpanSkor.mutate(score);
+          }}
+          className="mt-6 w-full rounded-2xl bg-brand px-6 py-3.5 font-bold text-white shadow-brand"
+        >
+          Selesai &amp; Lihat Skor
         </button>
       ) : null}
     </div>

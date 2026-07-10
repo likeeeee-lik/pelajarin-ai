@@ -1,5 +1,14 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Main ulang tanpa AI + prediksi soal interaktif (2026-07-10)
+- **Prediksi soal**: opsi dulu cuma dipajang. Kini bisa **diklik** → kunci jawaban hijau, pilihan salah merah, pembahasan muncul; skor berjalan + tombol Ulangi (state lokal, tak disimpan). Soal esai (tanpa opsi) → tombol "Lihat jawaban". Panel Pro "Analisis" dirombak: kunci jawaban DIHAPUS dari sana (kini gratis), diganti distribusi kesulitan + topik sering muncul + rekomendasi.
+- **Kuis**: dulu tersimpan di DB tapi UI tak pernah menampilkannya (`quizzesApi.list/get` ditulis tapi tak dipakai) → tiap ulang = generate baru = biaya AI. Kini fase `list` (riwayat: tanggal, jumlah soal, skor terakhir) → "Kerjakan" memuat dari DB **tanpa AI**. `PATCH /quizzes/:id/score` baru (kolom `Quiz.skor` dulu selalu null), skor dipangkas 0..jumlah soal.
+- **Flashcard**: "Buat Ulang" **menghapus semua kartu lama** (`deleteMany`) — tanpa peringatan. Kini ada **"Main Ulang"** (gratis, reset indeks) terpisah dari **"Buat Ulang"** (peringatan kuning: N kartu akan dihapus, memanggil AI, tak bisa dibatalkan + tombol Batal).
+- **Pesan error**: `apiFetch` dulu melempar body JSON mentah; modal menampilkan "Gagal memproses. Coba lagi." → pesan berguna hilang. Kini `errorMessage()` mengekstrak `message` Nest, dan kedua modal unggah (materi & prediksi) menampilkannya. Modal materi dulu **tak menampilkan error sama sekali**.
+- Dikonfirmasi: file gagal dibaca → `throw` SEBELUM `predictExam`/`generateOutline` → **AI tidak dipanggil**, token aman.
+- Verified: buka kuis lama 238ms tanpa AI (soal identik) · skor 2 bertahan · skor 999 dipangkas ke 2 · flashcard dari DB 590ms · buat ulang menghapus kartu lama (terbukti) · **isolasi**: Budi baca/ubah kuis Andi → 403, flashcard → 404; Andi ubah skornya sendiri → 200.
+JEBAKAN UJI: `nama: "B"` ditolak (min 2 karakter) → token kosong → 401 yang tampak seperti "ditolak karena bukan pemilik". Selalu pastikan token uji benar-benar terbit.
+
 ## 4 BUG ingestion ditemukan dari 1 keluhan user (2026-07-10)
 User unggah FOTO soal MTK "perbandingan" → prediksi malah soal tentang kepanjangan "UTS". Log menyingkap 4 bug:
 1. **Fallback diam-diam**: `sourceText = parts.join() || dto.judul` → tanpa teks, AI memprediksi dari JUDUL. Kegagalan tersembunyi & hasil terlihat meyakinkan. FIX: `BadRequestException` bila ada file tapi nol teks (di predictions DAN materials.createFromUpload). **Aturan: jangan pernah fallback diam-diam ke judul.**

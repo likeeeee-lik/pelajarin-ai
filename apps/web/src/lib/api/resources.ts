@@ -97,6 +97,9 @@ export const quizzesApi = {
       body: JSON.stringify(input),
     }),
   get: (quizId: string) => apiFetch<Quiz>(`/quizzes/${quizId}`),
+  /** Simpan skor — tidak memanggil AI. */
+  saveScore: (quizId: string, skor: number) =>
+    apiFetch<Quiz>(`/quizzes/${quizId}/score`, { method: "PATCH", body: JSON.stringify({ skor }) }),
 };
 
 export const chatApi = {

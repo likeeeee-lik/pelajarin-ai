@@ -108,6 +108,12 @@ export function CreateMaterialModal({ source, onClose }: { source: MaterialType;
           </button>
         </div>
 
+        {create.isError ? (
+          <p className="mb-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-400">
+            {create.error instanceof Error ? create.error.message : "Gagal memproses. Coba lagi."}
+          </p>
+        ) : null}
+
         {/* ── Tulis Catatan: satu langkah ── */}
         {isNote ? (
           <div className="flex flex-col gap-5">

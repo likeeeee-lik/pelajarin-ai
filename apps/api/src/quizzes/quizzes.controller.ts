@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthUser } from "../auth/jwt.types";
@@ -27,5 +27,11 @@ export class QuizzesController {
   @Get("quizzes/:quizId")
   get(@CurrentUser() user: AuthUser, @Param("quizId") quizId: string) {
     return this.quizzes.get(user, quizId);
+  }
+
+  /** Simpan skor setelah kuis dikerjakan (tanpa memanggil AI). */
+  @Patch("quizzes/:quizId/score")
+  saveScore(@CurrentUser() user: AuthUser, @Param("quizId") quizId: string, @Body() body: { skor: number }) {
+    return this.quizzes.saveScore(user, quizId, body.skor);
   }
 }

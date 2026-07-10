@@ -47,6 +47,25 @@ async function authToken(): Promise<string> {
   return token;
 }
 
+/**
+ * Ambil pesan yang bisa dibaca manusia dari balasan error.
+ * Nest membalas `{ message, error, statusCode }` — tanpa ini seluruh JSON
+ * mentah muncul di UI (atau tertelan jadi "Coba lagi").
+ */
+async function errorMessage(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "");
+  if (text) {
+    try {
+      const body = JSON.parse(text) as { message?: string | string[] };
+      if (Array.isArray(body.message)) return body.message.join(", ");
+      if (body.message) return body.message;
+    } catch {
+      return text;
+    }
+  }
+  return res.statusText || "Terjadi kesalahan";
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
   const res = await fetch(BASE + path, {
@@ -61,8 +80,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (!res.ok) {
     // token mungkin kedaluwarsa → paksa ambil ulang di percobaan berikutnya
     if (res.status === 401) clearTokenCache();
-    const text = await res.text().catch(() => res.statusText);
-    throw new ApiError(res.status, text || res.statusText);
+    throw new ApiError(res.status, await errorMessage(res));
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;

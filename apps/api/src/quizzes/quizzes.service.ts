@@ -29,6 +29,14 @@ export class QuizzesService {
     return quiz;
   }
 
+  /** Simpan skor terakhir. Dipangkas ke rentang 0..jumlah soal. */
+  async saveScore(user: AuthUser, quizId: string, skor: number) {
+    const quiz = await this.get(user, quizId);
+    const soal = (quiz.soalJson as { questions?: unknown[] } | null)?.questions ?? [];
+    const aman = Math.max(0, Math.min(Math.trunc(skor), soal.length));
+    return this.prisma.quiz.update({ where: { id: quizId }, data: { skor: aman } });
+  }
+
   async generate(
     user: AuthUser,
     materialId: string,
