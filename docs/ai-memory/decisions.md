@@ -1,5 +1,11 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Dev pakai Turbopack (2026-07-10)
+Klik pertama tiap rute di sidebar terasa "tidak jalan" — ternyata kompilasi on-demand webpack: `/app/mata-pelajaran` **43s**, latihan-soal 17,5s, streaks 16,9s (klik berikutnya 0,26s). Bukan bug.
+Next 15.5 + next.config polos (hanya reactStrictMode + transpilePackages) → `next dev --turbopack` aman. Diukur setelah `rm -rf .next`: semua rute **0,4–1,7s** (landing 8,4s sekali di awal). Tak ada error/warning; gate auth utuh (`/app` 307, `/api/logto/token` 401). Log Next mencetak `Compiled /app/...` walau balasannya 307 → halaman benar-benar terkompilasi, angkanya sahih.
+`build` sengaja TIDAK diubah (tetap webpack) supaya produksi tak berubah risikonya.
+CATATAN: jangan jalankan dua dev server pada dir yang sama (bentrok `.next`); pernah kejadian API lama menyandera port 4000 → restart gagal diam-diam dgn EADDRINUSE & log jadi menyesatkan.
+
 ## Auth Logto AKTIF (2026-07-10)
 Tenant Logto Cloud sudah dibuat user; env terisi (`apps/web/.env.local` + `apps/api/.env`, keduanya gitignored — endpoint/app-id/secret JANGAN ditulis di repo). `NEXT_PUBLIC_AUTH_MODE=logto`, `AUTH_MODE` tidak ada di api/.env, `LOGTO_JWKS_URL`/`LOGTO_ISSUER` diturunkan dari endpoint (dikonfirmasi lewat `/oidc/.well-known/openid-configuration`), `LOGTO_AUDIENCE`=`LOGTO_API_RESOURCE`=`https://api.pelajarin.ai`.
 Terverifikasi (tanpa browser): API tolak `Bearer dev`/tanpa token → 401 (dulu 200). `/app` → 307 ke `/api/logto/sign-in`. sign-in → 302 ke `{endpoint}/oidc/auth` dgn PKCE + `resource=https://api.pelajarin.ai` (audience cocok). `?provider=google|discord` → `direct_sign_in=social:google|discord`; `?first_screen=register` → `first_screen=register`. Connector google+discord AKTIF di tenant; sign-in method: email.

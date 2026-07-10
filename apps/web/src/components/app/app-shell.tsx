@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (takeOnboardingPending()) {
       meApi
         .update({ onboardingCompleted: true })
-        .then(() => qc.invalidateQueries({ queryKey: ["me"] }))
+        .then((updated) => qc.setQueryData(["me"], updated))
         .catch(() => {
           /* biarkan; akan dicoba lagi saat kunjungan berikutnya */
         });

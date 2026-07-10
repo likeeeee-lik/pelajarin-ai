@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PHASES, QUESTIONS, activeQuestions } from "@/lib/onboarding/questions";
 import { computeRadar } from "@/lib/onboarding/scoring";
@@ -50,6 +51,7 @@ export function OnboardingWizard() {
 
   const scores = useMemo(() => computeRadar(answers), [answers]);
   const { signedIn } = useSession();
+  const qc = useQueryClient();
 
   /**
    * Selesai onboarding.
@@ -64,7 +66,10 @@ export function OnboardingWizard() {
       return;
     }
     try {
-      await meApi.update({ onboardingCompleted: true });
+      const updated = await meApi.update({ onboardingCompleted: true });
+      // WAJIB: segarkan cache ["me"] SEBELUM pindah. Tanpa ini AppShell membaca
+      // profil basi (onboardingCompleted: false) dan melempar balik ke wizard.
+      qc.setQueryData(["me"], updated);
     } catch {
       /* jangan menahan user bila API bermasalah */
     }
