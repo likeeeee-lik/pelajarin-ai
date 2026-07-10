@@ -76,6 +76,23 @@ model Profile {
   usageQuota        UsageQuota[]
   subscription      Subscription?
   referral          Referral?
+  refreshTokens     RefreshToken[]
+}
+
+/// Sesi jangka panjang. Token disimpan sebagai SHA-256 (nilai asli tak pernah
+/// ada di DB). Dirotasi tiap dipakai; token lama ditandai revoked + replacedById
+/// sehingga pemakaian ulang bisa dideteksi (tanda token dicuri).
+model RefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdAt    DateTime  @default(now())
+  user         Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model OnboardingAnswer {

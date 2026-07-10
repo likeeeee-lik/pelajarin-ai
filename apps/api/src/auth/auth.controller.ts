@@ -22,6 +22,18 @@ export class AuthController {
     return this.auth.login(dto);
   }
 
+  /** Tukar refresh token dengan sepasang token baru. Token lama langsung hangus. */
+  @Post("refresh")
+  refresh(@Body() dto: { refreshToken?: string }) {
+    return this.auth.refreshSession(dto.refreshToken ?? "");
+  }
+
+  /** Keluar dari perangkat ini (mencabut refresh token-nya). */
+  @Post("logout")
+  logout(@Body() dto: { refreshToken?: string }) {
+    return this.auth.logout(dto.refreshToken);
+  }
+
   /** Kirim (ulang) kode verifikasi email. */
   @Post("verify/request")
   requestVerification(@Body() dto: { email?: string }) {

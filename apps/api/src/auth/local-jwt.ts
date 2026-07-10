@@ -3,8 +3,11 @@ import type { AuthUser } from "./jwt.types";
 
 const ISSUER = "pelajarin";
 const AUDIENCE = "pelajarin-api";
-/** Umur token. Cukup lama agar user tak sering keluar, cukup pendek agar aman. */
-const TTL = "7d";
+/**
+ * Access token sengaja pendek: bila bocor, jendela penyalahgunaannya sempit.
+ * Sesi panjang ditangani refresh token (lihat refresh.service.ts).
+ */
+const TTL = "15m";
 
 /** Rahasia penanda tangan. Wajib diisi saat AUTH_MODE=local. */
 function secret(): Uint8Array {

@@ -1,12 +1,9 @@
-import { cookies } from "next/headers";
-import { SESSION_COOKIE, cookieOptions } from "@/lib/auth-cookie";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { API, setSessionCookies, type AuthPayload } from "./session";
 
 /**
  * Teruskan permintaan ke API dan salin balasannya.
  * `setCookieOnToken`: bila API mengembalikan token (mis. reset password →
- * langsung masuk), simpan di cookie httpOnly.
+ * langsung masuk), simpan sepasang token di cookie httpOnly.
  */
 export async function forward(
   request: Request,
@@ -21,9 +18,7 @@ export async function forward(
     body: JSON.stringify(body),
     cache: "no-store",
   });
-  const data = (await res.json().catch(() => null)) as
-    | { token?: string; message?: string; ok?: boolean }
-    | null;
+  const data = (await res.json().catch(() => null)) as AuthPayload | null;
 
   if (!res.ok) {
     return Response.json(
@@ -32,8 +27,6 @@ export async function forward(
     );
   }
 
-  if (opts.setCookieOnToken && data?.token) {
-    (await cookies()).set(SESSION_COOKIE, data.token, cookieOptions);
-  }
+  if (opts.setCookieOnToken && data?.token) await setSessionCookies(data);
   return Response.json({ ok: true, message: data?.message });
 }

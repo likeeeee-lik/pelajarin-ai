@@ -11,6 +11,7 @@ import { resetPasswordTemplate, verifyEmailTemplate } from "../mail/templates";
 import { checkPasswordStrength, hashPassword, verifyPassword } from "./password";
 import { signLocalToken } from "./local-jwt";
 import { CODE_TTL_MINUTES, VerificationService } from "./verification.service";
+import { RefreshService } from "./refresh.service";
 
 export interface RegisterDto {
   nama?: string;
@@ -23,7 +24,10 @@ export interface LoginDto {
 }
 
 export interface AuthResult {
+  /** JWT berumur pendek untuk memanggil API. */
   token: string;
+  /** Token buram berumur panjang untuk memperbarui `token`. */
+  refreshToken: string;
   user: { id: string; nama: string; email: string; emailVerified: boolean };
 }
 
@@ -81,6 +85,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly mail: MailProvider,
     private readonly verification: VerificationService,
+    private readonly refresh: RefreshService,
   ) {}
 
   private normalizeEmail(email: string): string {
@@ -94,7 +99,35 @@ export class AuthService {
     emailVerified: boolean;
   }): Promise<AuthResult> {
     const token = await signLocalToken({ sub: user.id, email: user.email, name: user.nama });
-    return { token, user };
+    const refreshToken = await this.refresh.issue(user.id);
+    return { token, refreshToken, user };
+  }
+
+  /** Tukar refresh token dengan sepasang token baru (rotasi). */
+  async refreshSession(refreshToken: string): Promise<AuthResult> {
+    if (!refreshToken) throw new UnauthorizedException("Sesi tidak valid");
+    const { userId, token: baru } = await this.refresh.rotate(refreshToken);
+
+    const profile = await this.prisma.profile.findUnique({ where: { id: userId } });
+    if (!profile) throw new UnauthorizedException("Sesi tidak valid");
+
+    const token = await signLocalToken({ sub: profile.id, email: profile.email, name: profile.nama });
+    return {
+      token,
+      refreshToken: baru,
+      user: {
+        id: profile.id,
+        nama: profile.nama,
+        email: profile.email,
+        emailVerified: profile.emailVerified,
+      },
+    };
+  }
+
+  /** Keluar dari satu perangkat. */
+  async logout(refreshToken?: string): Promise<{ ok: true }> {
+    if (refreshToken) await this.refresh.revoke(refreshToken);
+    return { ok: true };
   }
 
   /** Kirim kode; kegagalan email tidak boleh menggagalkan pendaftaran. */
@@ -225,6 +258,9 @@ export class AuthService {
       data: { passwordHash: await hashPassword(password), emailVerified: true },
       select: { id: true, nama: true, email: true, emailVerified: true },
     });
+    // Ganti password harus mengusir sesi lain. Tanpa ini, penyusup yang sudah
+    // terlanjur masuk tetap bertahan meski korban sudah mengganti passwordnya.
+    await this.refresh.revokeAllForUser(profile.id);
     clearAttempts(email);
     return this.issue(profile);
   }

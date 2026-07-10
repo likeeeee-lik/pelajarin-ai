@@ -1,8 +1,13 @@
-/** Nama cookie sesi (httpOnly, diset oleh route /api/auth/*). */
+/** Cookie sesi (httpOnly, diset oleh route /api/auth/*). */
 export const SESSION_COOKIE = "pelajarin_token";
+export const REFRESH_COOKIE = "pelajarin_refresh";
 
-/** 7 hari — sepadan dengan umur JWT yang diterbitkan API. */
-export const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
+/**
+ * Umur cookie 60 hari — sepadan dengan refresh token.
+ * Isi `SESSION_COOKIE` sendiri kedaluwarsa jauh lebih cepat (15 menit); cookie-nya
+ * sengaja berumur panjang agar bisa ditukar lewat refresh tanpa memaksa login.
+ */
+export const SESSION_MAX_AGE = 60 * 24 * 60 * 60;
 
 export const cookieOptions = {
   httpOnly: true,
