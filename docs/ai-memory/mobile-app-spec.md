@@ -1,5 +1,17 @@
 # Spesifikasi Mobile App (dari docs/ss/app, 38 layar) — dibaca 2026-07-10
 
+## STATUS BUILD (2026-07-11): fase 1–5 SELESAI (commit 20ebe9e)
+Semua 5 tab + alur dibangun & terverifikasi (tsc bersih, bundle Metro 3,19MB, BELUM diuji perangkat):
+- `(tabs)/beranda` (sapaan, chip streak/lvl/xp, fokus card, 4 kartu statistik, Koleksi + filter, FAB)
+- `(tabs)/mata-pelajaran` (tambah/hapus + statistik) · `(tabs)/ujian` (list prediksi)
+- `buat-prediksi` (2 langkah, picker mapel + expo-document-picker) · `prediksi/[id]` (opsi interaktif + kunci/pembahasan)
+- `buat-materi` (file/youtube/note) · `catatan/[id]` (workspace 5 sub-tab: Bab/MindMap/Flashcard/Kuis/Chat, semua lewat endpoint AI nyata, kuis replay dari DB + simpan skor)
+- `(tabs)/profil` (edit nama PATCH /me, kuota, keluar) · `pricing` (placeholder, bayar belum ada) · `(tabs)/peringkat` (placeholder, gamifikasi belum ada)
+Token di expo-secure-store; http.ts refresh senyap saat 401. expo-router grup + typed routes.
+BELUM: onboarding wizard di mobile (logika ada di API), Google OAuth, markdown render (kontenMd tampil teks polos), gamifikasi nyata, pembayaran.
+
+## Spesifikasi asli (dari 38 layar)
+
 Mobile = fitur SAMA dengan web, disusun dalam **5 tab bawah**:
 **Beranda · Mata Pelajaran · Ujian · Peringkat · Profil**
 
