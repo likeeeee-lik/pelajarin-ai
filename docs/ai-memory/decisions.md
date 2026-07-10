@@ -1,5 +1,15 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## AI NYATA aktif — Claude (2026-07-10)
+`AI_PROVIDER=claude` + `ANTHROPIC_API_KEY` terisi di `apps/api/.env`. Model: `claude-sonnet-5` (umum), `claude-opus-4-8` (prediksi ujian, via `ANTHROPIC_MODEL_PREDICT`). Kedua nama model diuji langsung ke `api.anthropic.com` → valid.
+**Verified E2E, ketujuh fitur menghasilkan konten nyata** (materi Fotosintesis): outline 4,9s · isi bab **25s** · mindmap 10,4s · flashcards 4,6s · kuis 5,9s · chat 9,9s · prediksi (Opus) 10,9s.
+Catatan penting:
+- Materi `tipe: "note"` SENGAJA tidak dibuatkan bab oleh AI (user menulis sendiri). Sempat mengecoh uji — bukan bug.
+- `json()` + `extractJson()` di ClaudeProvider terbukti tahan; tak ada kegagalan parse.
+- **UX**: "isi bab" 25 detik tanpa streaming/progres. Perlu indikator atau streaming sebelum dipakai orang lain.
+- Belum ada: retry/rate-limit handling, timeout, pembatasan kuota per user (biaya bisa bengkak).
+KEAMANAN: key pertama sempat bocor ke chat & tertulis `undefined` ke .env karena bug skrip (`process.env.__K` tak diisi). Sudah dicabut user & diganti. Jangan pernah menulis rahasia lewat argumen/skrip; minta user menempel sendiri.
+
 ## Verifikasi email + lupa password + OTP (2026-07-10)
 Mail server dummy: **MailDev** (`pnpm --filter @pelajarin/api mail` → SMTP 1025, kotak masuk http://localhost:1080). REST API-nya **`/api/email`** (bukan `/email` seperti MailDev v2) — sempat menyesatkan uji.
 Dibangun di atas **SMTP standar** (nodemailer), bukan API MailDev → pindah ke Resend/Mailgun/SES cukup ganti env. Pola provider spt AI/Storage: `MailProvider` abstract + `SmtpMailProvider` + `ConsoleMailProvider` (fallback bila `SMTP_HOST` kosong: email dicetak ke log, fitur tetap jalan).
