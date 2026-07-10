@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import type { AuthUser } from "../auth/jwt.types";
 import { PrismaService } from "../prisma/prisma.service";
+import { LogtoAdmin } from "../logto/logto-admin";
+
+/** Domain email tiruan saat identitas asli belum diketahui. */
+const PLACEHOLDER_DOMAIN = "@pelajarin.local";
+const PLACEHOLDER_NAME = "Pengguna";
 
 export interface ProfileDto {
   id: string;
@@ -26,11 +31,14 @@ export interface UpdateProfileDto {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logto: LogtoAdmin,
+  ) {}
 
   /** Ambil profil user; buat otomatis saat pertama kali login (upsert by Logto sub). */
   async getProfile(user: AuthUser): Promise<ProfileDto> {
-    const p = await this.prisma.profile.upsert({
+    let p = await this.prisma.profile.upsert({
       where: { id: user.sub },
       // Sinkron dari IdP hanya email/avatar. `nama` sengaja TIDAK ditimpa agar
       // perubahan nama tampilan oleh user (PATCH /me) tidak hilang.
@@ -40,12 +48,15 @@ export class UsersService {
       },
       create: {
         id: user.sub,
-        email: user.email ?? `${user.sub}@pelajarin.local`,
-        nama: user.name ?? "Pengguna",
+        email: user.email ?? `${user.sub}${PLACEHOLDER_DOMAIN}`,
+        nama: user.name ?? PLACEHOLDER_NAME,
         avatarUrl: user.picture ?? null,
       },
       include: { streak: true },
     });
+
+    const enriched = await this.enrichIdentity(p);
+    if (enriched) p = enriched;
 
     return {
       id: p.id,
@@ -62,6 +73,45 @@ export class UsersService {
       onboardingCompleted: p.onboardingDone,
     };
   }
+
+  /**
+   * Lengkapi identitas dari Logto bila profil masih memakai nilai tiruan.
+   * Dipicu HANYA saat email masih placeholder → sekali per user, bukan tiap request.
+   * `nama` yang sudah diubah user tidak pernah ditimpa.
+   */
+  private async enrichIdentity<
+    T extends { id: string; email: string; nama: string; avatarUrl: string | null },
+  >(p: T): Promise<T | null> {
+    if (!this.logto.enabled) return null;
+    if (!p.email.endsWith(PLACEHOLDER_DOMAIN)) return null; // sudah nyata
+    if (UsersService.enrichFailed.has(p.id)) return null; // jangan badai request
+
+    const identity = await this.logto.getUser(p.id);
+    if (!identity?.email) {
+      // tak ada email di Logto (mis. daftar via sosial tanpa email) → jangan ulangi
+      UsersService.enrichFailed.add(p.id);
+      return null;
+    }
+
+    const namaBaru =
+      p.nama === PLACEHOLDER_NAME
+        ? identity.name?.trim() || identity.email.split("@")[0]
+        : p.nama;
+
+    const updated = await this.prisma.profile.update({
+      where: { id: p.id },
+      data: {
+        email: identity.email,
+        nama: namaBaru,
+        ...(identity.picture && !p.avatarUrl ? { avatarUrl: identity.picture } : {}),
+      },
+      include: { streak: true },
+    });
+    return updated as unknown as T;
+  }
+
+  /** userId yang identitasnya tak bisa diambil — hindari memanggil Logto berulang. */
+  private static readonly enrichFailed = new Set<string>();
 
   /** Perbarui preferensi profil (nama tampilan & bahasa). */
   async updateProfile(user: AuthUser, dto: UpdateProfileDto): Promise<ProfileDto> {

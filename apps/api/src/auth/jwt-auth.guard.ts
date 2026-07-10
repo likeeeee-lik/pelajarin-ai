@@ -24,7 +24,6 @@ import type { AuthedRequest, AuthUser } from "./jwt.types";
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   private static warned = false;
-  private static claimsLogged = false;
   private readonly logger = new Logger(JwtAuthGuard.name);
   private jwks: JWTVerifyGetKey | null = null;
 
@@ -69,11 +68,9 @@ export class JwtAuthGuard implements CanActivate {
         issuer: process.env.LOGTO_ISSUER,
         audience: process.env.LOGTO_AUDIENCE || undefined,
       });
-      // DEBUG sementara: cetak NAMA klaim saja (bukan nilainya) sekali saja.
-      if (!JwtAuthGuard.claimsLogged) {
-        JwtAuthGuard.claimsLogged = true;
-        this.logger.log(`Klaim access token: ${Object.keys(payload).sort().join(", ")}`);
-      }
+      // Catatan: access token Logto hanya memuat `sub` (tanpa email/nama), jadi
+      // ketiga field di bawah biasanya undefined. Identitas diambil UsersService
+      // lewat Management API (lihat src/logto/).
       req.user = {
         sub: String(payload.sub),
         email: payload.email as string | undefined,
