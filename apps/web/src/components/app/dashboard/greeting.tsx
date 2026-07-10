@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Rocket } from "lucide-react";
-import { useProfileSettings } from "@/lib/store";
+import { useSession } from "@/lib/use-session";
 
 /** Sapaan + tanggal hari ini (id-ID) + tombol Tingkatkan Pro. */
 export function Greeting() {
-  const profile = useProfileSettings();
+  const { profile } = useSession();
   const [tanggal, setTanggal] = useState("");
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function Greeting() {
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">
-          Halo, {profile.nama}! <span className="align-middle">👋</span>
+          Halo, {profile?.nama ?? "Pengguna"}! <span className="align-middle">👋</span>
         </h1>
         <p className="mt-1 text-muted">{tanggal || " "}</p>
       </div>

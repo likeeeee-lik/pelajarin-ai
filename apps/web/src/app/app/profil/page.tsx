@@ -14,29 +14,41 @@ import {
   Target,
   User,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { MOCK_USER } from "@/lib/mock-user";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BAHASA_GENERASI, BAHASA_TAMPILAN, MOCK_SUBSCRIPTION } from "@/lib/mock-profile";
 import { ActivityHeatmap } from "@/components/app/profil/activity-heatmap";
-import { statsApi } from "@/lib/api/resources";
-import { saveProfile, useProfileSettings } from "@/lib/store";
+import { meApi, statsApi } from "@/lib/api/resources";
+import { useSession } from "@/lib/use-session";
+
+const PLAN_LABEL: Record<string, string> = { free: "Gratis", pro: "Pro", institusi: "Institusi" };
 
 export default function ProfilPage() {
-  const profile = useProfileSettings();
+  const qc = useQueryClient();
+  const { profile } = useSession();
   const statsQuery = useQuery({ queryKey: ["stats"], queryFn: statsApi.get });
   const s = statsQuery.data;
 
-  const [nama, setNama] = useState(profile.nama);
-  const [bahasaTampilan, setBahasaTampilan] = useState(profile.bahasaTampilan);
-  const [bahasaGenerasi, setBahasaGenerasi] = useState(profile.bahasaGenerasi);
+  const [nama, setNama] = useState("");
+  const [bahasaTampilan, setBahasaTampilan] = useState("id");
+  const [bahasaGenerasi, setBahasaGenerasi] = useState("id");
   const [saved, setSaved] = useState(false);
 
-  // sinkronkan form bila store berubah dari tempat lain
+  // isi form dari profil DB begitu tersedia
   useEffect(() => {
+    if (!profile) return;
     setNama(profile.nama);
     setBahasaTampilan(profile.bahasaTampilan);
     setBahasaGenerasi(profile.bahasaGenerasi);
-  }, [profile.nama, profile.bahasaTampilan, profile.bahasaGenerasi]);
+  }, [profile]);
+
+  const save = useMutation({
+    mutationFn: () => meApi.update({ nama: nama.trim() || "Pengguna", bahasaTampilan, bahasaGenerasi }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
+  });
 
   const stats = [
     { label: "Total Catatan", value: s?.materials ?? 0, icon: FileText, color: "text-sky-400 bg-sky-400/15" },
@@ -45,12 +57,6 @@ export default function ProfilPage() {
     { label: "Prediksi Ujian", value: s?.predictions ?? 0, icon: Target, color: "text-red-400 bg-red-400/15" },
     { label: "Total File", value: s?.files ?? 0, icon: BarChart3, color: "text-brand bg-brand/15" },
   ];
-
-  function simpan() {
-    saveProfile({ nama: nama.trim() || "Pengguna", bahasaTampilan, bahasaGenerasi });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +95,7 @@ export default function ProfilPage() {
             </Field>
 
             <Field label="Email" icon={<Mail className="h-4 w-4 text-brand" />}>
-              <input value={MOCK_USER.email} disabled className="input-field opacity-60" />
+              <input value={profile?.email ?? ""} disabled className="input-field opacity-60" />
               <p className="mt-1 text-xs text-muted">Email terikat dengan akun dan tidak dapat diubah</p>
             </Field>
 
@@ -119,10 +125,13 @@ export default function ProfilPage() {
 
             <button
               type="button"
-              onClick={simpan}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition hover:bg-brand-600"
+              onClick={() => save.mutate()}
+              disabled={save.isPending || !profile}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3.5 font-bold text-white shadow-brand transition enabled:hover:bg-brand-600 disabled:opacity-50"
             >
-              {saved ? (
+              {save.isPending ? (
+                "Menyimpan…"
+              ) : saved ? (
                 <>
                   <Check className="h-5 w-5" /> Tersimpan
                 </>
@@ -130,6 +139,9 @@ export default function ProfilPage() {
                 "Simpan"
               )}
             </button>
+            {save.isError ? (
+              <p className="-mt-2 text-sm text-rose-400">Gagal menyimpan. Coba lagi.</p>
+            ) : null}
           </div>
         </div>
 
@@ -145,7 +157,7 @@ export default function ProfilPage() {
               </div>
             </div>
             <span className="rounded-full border border-ink-500 px-3 py-1 text-xs font-semibold text-muted">
-              {MOCK_SUBSCRIPTION.plan}
+              {PLAN_LABEL[profile?.plan ?? "free"]}
             </span>
           </div>
 

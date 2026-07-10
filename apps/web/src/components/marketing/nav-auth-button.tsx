@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { LayoutDashboard } from "lucide-react";
-import { useSignedIn } from "@/lib/session";
-import { useProfileSettings } from "@/lib/store";
+import { useSession } from "@/lib/use-session";
 
 /** Tombol kanan navbar landing: profil (bila sudah masuk) atau "Masuk". */
 export function NavAuthButton() {
-  const signedIn = useSignedIn();
-  const profile = useProfileSettings();
+  const { signedIn, profile } = useSession();
 
   if (signedIn) {
+    const nama = profile?.nama ?? "Akun";
     return (
       <Link
         href="/app"
@@ -18,9 +17,9 @@ export function NavAuthButton() {
         className="flex items-center gap-2 rounded-2xl border border-ink-500 bg-ink-800/60 py-1.5 pl-1.5 pr-3 text-sm font-semibold transition hover:border-brand/50 hover:bg-ink-700"
       >
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-600 text-xs font-bold text-white">
-          {(profile.nama || "U").charAt(0).toUpperCase()}
+          {nama.charAt(0).toUpperCase()}
         </span>
-        <span className="hidden max-w-[7rem] truncate sm:inline">{profile.nama || "Akun"}</span>
+        <span className="hidden max-w-[7rem] truncate sm:inline">{nama}</span>
         <LayoutDashboard className="h-4 w-4 text-muted sm:hidden" />
       </Link>
     );

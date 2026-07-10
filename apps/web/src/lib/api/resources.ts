@@ -9,11 +9,18 @@ import type {
   Material,
   MaterialSummary,
   MindMap,
+  Profile,
   Quiz,
   QuizType,
   Subject,
   UserStats,
 } from "./types";
+
+export const meApi = {
+  get: () => apiFetch<Profile>("/me"),
+  update: (input: { nama?: string; bahasaTampilan?: string; bahasaGenerasi?: string }) =>
+    apiFetch<Profile>("/me", { method: "PATCH", body: JSON.stringify(input) }),
+};
 
 export const statsApi = {
   get: () => apiFetch<UserStats>("/stats"),

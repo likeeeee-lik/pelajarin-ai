@@ -1,7 +1,7 @@
 "use client";
 
 import { SOURCES } from "./sources";
-import type { MaterialType } from "@/lib/store";
+import type { MaterialType } from "@/lib/api/types";
 
 /** Baris cepat "Buat baru:" — memicu modal pembuatan materi. */
 export function CreateBar({ onPick }: { onPick: (source: MaterialType) => void }) {

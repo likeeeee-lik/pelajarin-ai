@@ -1,5 +1,16 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Auth Logto: kode SIAP, tinggal isi env (2026-07-09)
+Panduan lengkap: `docs/logto-setup.md`. Yang dibangun:
+- **Jembatan token**: `app/api/logto/token/route.ts` (getAccessToken utk `LOGTO_API_RESOURCE`). `lib/api/http.ts` kini async — mode `logto` ambil token dari route itu (cache 60s, dibuang saat 401); mode `stub` tetap kirim `"dev"`. `apiFetch` TIDAK pernah dipanggil dari server component (sudah dicek) jadi fetch relatif aman.
+- **sign-in route** hormati `?provider=google|discord` → `directSignIn: {method:"social", target}` (BUKAN string) & `?first_screen=register`.
+- **callback** cek `onboardingCompleted` via `GET /me` → `/onboarding` atau `/app` (fallback `/app` bila API error).
+- **Identitas asli**: `GET /me` + `PATCH /me` (baru) di UsersController. BUG DIPERBAIKI: `getProfile` dulu menimpa `nama` dari IdP tiap panggilan → editan user hilang; kini upsert update hanya sinkron email/avatar.
+- `lib/use-session.ts` = sumber tunggal (profil selalu dari `/me`; signedIn: logto→`/me` sukses, stub→flag localStorage `lib/session.ts`). Dipakai sidebar/greeting/nav-auth-button/profil.
+- **Dihapus**: `lib/store.ts` (subjects/materials sudah dead code; profil pindah ke DB via PATCH /me). `MOCK_USER` kini HANYA dipakai halaman streaks (gamifikasi, belum nyata).
+- **KEAMANAN**: `JwtAuthGuard.isStub` menolak stub saat `NODE_ENV=production` → fail-closed. Terbukti: prod tanpa JWKS → `/me` & `/materials` 401 utk token apa pun; dev stub tetap 200.
+Menyalakan: isi env web (NEXT_PUBLIC_AUTH_MODE=logto + LOGTO_*) & api (kosongkan AUTH_MODE, isi LOGTO_JWKS_URL/ISSUER/AUDIENCE).
+
 ## Penanda sesi login di navbar landing (2026-07-09)
 Mode auth masih stub (belum ada sesi nyata). `lib/session.ts` = flag localStorage `pelajarin.session` (useSyncExternalStore). Diset via `markSignedIn()` di `AppShell` useEffect (masuk dashboard = login), dihapus via `clearSession()` di `signOut()` stub (Keluar). Navbar landing pakai `<NavAuthButton/>` (client): kalau signedIn → avatar+nama profil (link ke /app), else tombol "Masuk". TODO(logto): ganti dgn sesi Logto asli.
 

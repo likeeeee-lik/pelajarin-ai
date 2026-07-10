@@ -115,6 +115,22 @@ export interface PublicMaterial {
   chapters: { urutan: number; judul: string; kontenMd: string | null }[];
 }
 
+/** Profil user dari API (`GET /me`), sumber identitas asli di UI. */
+export interface Profile {
+  id: string;
+  nama: string;
+  email: string;
+  avatarUrl: string | null;
+  plan: "free" | "pro" | "institusi";
+  bahasaTampilan: string;
+  bahasaGenerasi: string;
+  xp: number;
+  level: number;
+  streakCurrent: number;
+  streakBest: number;
+  onboardingCompleted: boolean;
+}
+
 export interface UserStats {
   materials: number;
   flashcards: number;

@@ -17,6 +17,12 @@ export interface ProfileDto {
   onboardingCompleted: boolean;
 }
 
+export interface UpdateProfileDto {
+  nama?: string;
+  bahasaTampilan?: string;
+  bahasaGenerasi?: string;
+}
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -25,9 +31,10 @@ export class UsersService {
   async getProfile(user: AuthUser): Promise<ProfileDto> {
     const p = await this.prisma.profile.upsert({
       where: { id: user.sub },
+      // Sinkron dari IdP hanya email/avatar. `nama` sengaja TIDAK ditimpa agar
+      // perubahan nama tampilan oleh user (PATCH /me) tidak hilang.
       update: {
         ...(user.email ? { email: user.email } : {}),
-        ...(user.name ? { nama: user.name } : {}),
         ...(user.picture ? { avatarUrl: user.picture } : {}),
       },
       create: {
@@ -53,5 +60,20 @@ export class UsersService {
       streakBest: p.streak?.best ?? 0,
       onboardingCompleted: p.onboardingDone,
     };
+  }
+
+  /** Perbarui preferensi profil (nama tampilan & bahasa). */
+  async updateProfile(user: AuthUser, dto: UpdateProfileDto): Promise<ProfileDto> {
+    await this.getProfile(user); // pastikan profil ada
+    const nama = dto.nama?.trim();
+    await this.prisma.profile.update({
+      where: { id: user.sub },
+      data: {
+        ...(nama ? { nama } : {}),
+        ...(dto.bahasaTampilan ? { bahasaTampilan: dto.bahasaTampilan } : {}),
+        ...(dto.bahasaGenerasi ? { bahasaGenerasi: dto.bahasaGenerasi } : {}),
+      },
+    });
+    return this.getProfile(user);
   }
 }

@@ -6,8 +6,7 @@ import { useState } from "react";
 import { ChevronLeft, Home, LogOut, Rocket, User } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { signOut } from "@/lib/auth";
-import { MOCK_USER } from "@/lib/mock-user";
-import { useProfileSettings } from "@/lib/store";
+import { useSession } from "@/lib/use-session";
 import { NAV_ITEMS, isActive } from "./nav-config";
 
 export function Sidebar({
@@ -18,7 +17,9 @@ export function Sidebar({
   onToggle: () => void;
 }) {
   const pathname = usePathname();
-  const profile = useProfileSettings();
+  const { profile } = useSession();
+  const nama = profile?.nama ?? "Pengguna";
+  const email = profile?.email ?? "";
   const [menuOpen, setMenuOpen] = useState(false);
   const upgradeActive = pathname.startsWith("/app/upgrade");
 
@@ -95,8 +96,8 @@ export function Sidebar({
             />
             <div className="absolute bottom-full left-0 z-20 mb-2 w-52 overflow-hidden rounded-xl border border-ink-500 bg-ink-700 shadow-xl">
               <div className="border-b border-ink-500 px-4 py-3">
-                <p className="truncate font-semibold">{profile.nama}</p>
-                <p className="truncate text-xs text-muted">{MOCK_USER.email}</p>
+                <p className="truncate font-semibold">{nama}</p>
+                <p className="truncate text-xs text-muted">{email}</p>
               </div>
               <Link
                 href="/app/profil"
@@ -129,11 +130,11 @@ export function Sidebar({
             collapsed ? "justify-center" : ""
           }`}
         >
-          <Avatar name={profile.nama} />
+          <Avatar name={nama} />
           {!collapsed && (
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{profile.nama}</span>
-              <span className="block truncate text-xs text-muted">{MOCK_USER.email}</span>
+              <span className="block truncate text-sm font-semibold">{nama}</span>
+              <span className="block truncate text-xs text-muted">{email}</span>
             </span>
           )}
         </button>
