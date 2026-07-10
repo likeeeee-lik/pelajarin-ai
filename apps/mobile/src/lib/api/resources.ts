@@ -1,32 +1,95 @@
 import { apiFetch } from "./http";
+import type {
+  Chapter,
+  ChatMessage,
+  ChatSession,
+  ExamPrediction,
+  Flashcard,
+  Material,
+  MaterialSummary,
+  MindMap,
+  Profile,
+  Quiz,
+  QuizType,
+  Subject,
+  UserStats,
+} from "./types";
 
-export interface Profile {
-  id: string;
-  nama: string;
-  email: string;
-  emailVerified: boolean;
-  plan: "free" | "pro" | "institusi";
-}
+export const meApi = {
+  get: () => apiFetch<Profile>("/me"),
+  update: (input: { nama?: string; bahasaTampilan?: string; bahasaGenerasi?: string }) =>
+    apiFetch<Profile>("/me", { method: "PATCH", body: JSON.stringify(input) }),
+};
 
-export interface UserStats {
-  materials: number;
-  flashcards: number;
-  quizzes: number;
-  predictions: number;
-  subjects: number;
-  files: number;
-}
+export const statsApi = {
+  get: () => apiFetch<UserStats>("/stats"),
+};
 
-export interface MaterialSummary {
-  id: string;
-  judul: string;
-  tipe: string;
-  createdAt: string;
-  subject: { id: string; nama: string } | null;
-  _count: { chapters: number };
-}
+export const subjectsApi = {
+  list: () => apiFetch<Subject[]>("/subjects"),
+  create: (nama: string) => apiFetch<Subject>("/subjects", { method: "POST", body: JSON.stringify({ nama }) }),
+  remove: (id: string) => apiFetch<{ ok: true }>(`/subjects/${id}`, { method: "DELETE" }),
+};
 
-// TODO(shared): pindahkan tipe ini ke packages/shared agar web & mobile sama persis.
-export const meApi = { get: () => apiFetch<Profile>("/me") };
-export const statsApi = { get: () => apiFetch<UserStats>("/stats") };
-export const materialsApi = { list: () => apiFetch<MaterialSummary[]>("/materials") };
+export const materialsApi = {
+  list: () => apiFetch<MaterialSummary[]>("/materials"),
+  get: (id: string) => apiFetch<Material>(`/materials/${id}`),
+  create: (input: {
+    judul: string;
+    tipe: string;
+    subjectId?: string;
+    sourceUrl?: string;
+    rawText?: string;
+  }) => apiFetch<Material>("/materials", { method: "POST", body: JSON.stringify(input) }),
+  upload: (form: FormData) => apiFetch<Material>("/materials/upload", { method: "POST", body: form }),
+  remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
+};
+
+export const chaptersApi = {
+  add: (materialId: string, judul: string) =>
+    apiFetch<Chapter>("/chapters", { method: "POST", body: JSON.stringify({ materialId, judul }) }),
+  generate: (id: string) => apiFetch<Chapter>(`/chapters/${id}/generate`, { method: "POST" }),
+  update: (id: string, kontenMd: string) =>
+    apiFetch<Chapter>(`/chapters/${id}`, { method: "PATCH", body: JSON.stringify({ kontenMd }) }),
+};
+
+export const mindmapApi = {
+  get: (materialId: string) => apiFetch<MindMap | null>(`/materials/${materialId}/mindmap`),
+  generate: (materialId: string) =>
+    apiFetch<MindMap>(`/materials/${materialId}/mindmap/generate`, { method: "POST" }),
+};
+
+export const flashcardsApi = {
+  list: (materialId: string) => apiFetch<Flashcard[]>(`/materials/${materialId}/flashcards`),
+  generate: (materialId: string, input: { count: number; chapterIds?: string[] }) =>
+    apiFetch<Flashcard[]>(`/materials/${materialId}/flashcards/generate`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+};
+
+export const quizzesApi = {
+  list: (materialId: string) => apiFetch<Quiz[]>(`/materials/${materialId}/quizzes`),
+  generate: (materialId: string, input: { count: number; types: QuizType[]; chapterIds?: string[] }) =>
+    apiFetch<Quiz>(`/materials/${materialId}/quizzes/generate`, { method: "POST", body: JSON.stringify(input) }),
+  saveScore: (quizId: string, skor: number) =>
+    apiFetch<Quiz>(`/quizzes/${quizId}/score`, { method: "PATCH", body: JSON.stringify({ skor }) }),
+};
+
+export const chatApi = {
+  listSessions: (materialId: string) => apiFetch<ChatSession[]>(`/materials/${materialId}/chat/sessions`),
+  createSession: (materialId: string) =>
+    apiFetch<ChatSession>(`/materials/${materialId}/chat/sessions`, { method: "POST" }),
+  getMessages: (sessionId: string) => apiFetch<ChatMessage[]>(`/chat/sessions/${sessionId}/messages`),
+  sendMessage: (sessionId: string, input: { question: string; chapterIds?: string[] }) =>
+    apiFetch<{ user: ChatMessage; assistant: ChatMessage }>(`/chat/sessions/${sessionId}/messages`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+};
+
+export const predictionsApi = {
+  list: () => apiFetch<ExamPrediction[]>("/predictions"),
+  get: (id: string) => apiFetch<ExamPrediction>(`/predictions/${id}`),
+  upload: (form: FormData) => apiFetch<ExamPrediction>("/predictions/upload", { method: "POST", body: form }),
+};

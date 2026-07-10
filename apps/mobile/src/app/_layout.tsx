@@ -1,28 +1,18 @@
-import { useEffect, useState } from "react";
-import { Stack, router } from "expo-router";
+import { useEffect } from "react";
+import { router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setOnSesiHabis } from "@/lib/api/http";
-import { adaSesi } from "@/lib/auth";
 import { tema } from "@/lib/tema";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: 60_000 } },
 });
 
 export default function RootLayout() {
-  const [siap, setSiap] = useState(false);
-
-  // Rute awal ditentukan dari ada/tidaknya token tersimpan.
-  useEffect(() => {
-    adaSesi().then((punya) => {
-      router.replace(punya ? "/beranda" : "/masuk");
-      setSiap(true);
-    });
-  }, []);
-
-  // Bila refresh token ditolak (kedaluwarsa/dicabut), lempar ke layar masuk.
+  // Bila refresh token ditolak (kedaluwarsa/dicabut) di request mana pun,
+  // bersihkan cache lalu lempar ke layar masuk.
   useEffect(() => {
     setOnSesiHabis(() => {
       queryClient.clear();
@@ -39,13 +29,16 @@ export default function RootLayout() {
           screenOptions={{
             headerStyle: { backgroundColor: tema.bg },
             headerTintColor: tema.teks,
+            headerShadowVisible: false,
             contentStyle: { backgroundColor: tema.bg },
-            animation: siap ? "default" : "none",
           }}
         >
-          <Stack.Screen name="masuk" options={{ title: "Masuk" }} />
-          <Stack.Screen name="daftar" options={{ title: "Buat akun" }} />
-          <Stack.Screen name="beranda" options={{ title: "Pelajarin.ai" }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="masuk" options={{ headerShown: false }} />
+          <Stack.Screen name="daftar" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="catatan/[id]" options={{ title: "Catatan" }} />
+          <Stack.Screen name="prediksi/[id]" options={{ title: "Prediksi" }} />
         </Stack>
       </SafeAreaProvider>
     </QueryClientProvider>
