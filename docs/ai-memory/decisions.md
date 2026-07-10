@@ -1,5 +1,11 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## Auth Logto AKTIF (2026-07-10)
+Tenant Logto Cloud sudah dibuat user; env terisi (`apps/web/.env.local` + `apps/api/.env`, keduanya gitignored — endpoint/app-id/secret JANGAN ditulis di repo). `NEXT_PUBLIC_AUTH_MODE=logto`, `AUTH_MODE` tidak ada di api/.env, `LOGTO_JWKS_URL`/`LOGTO_ISSUER` diturunkan dari endpoint (dikonfirmasi lewat `/oidc/.well-known/openid-configuration`), `LOGTO_AUDIENCE`=`LOGTO_API_RESOURCE`=`https://api.pelajarin.ai`.
+Terverifikasi (tanpa browser): API tolak `Bearer dev`/tanpa token → 401 (dulu 200). `/app` → 307 ke `/api/logto/sign-in`. sign-in → 302 ke `{endpoint}/oidc/auth` dgn PKCE + `resource=https://api.pelajarin.ai` (audience cocok). `?provider=google|discord` → `direct_sign_in=social:google|discord`; `?first_screen=register` → `first_screen=register`. Connector google+discord AKTIF di tenant; sign-in method: email.
+BELUM diuji: login interaktif di browser (butuh user), callback, onboarding gate, keluar.
+**PENTING**: data lama ada di `userId="demo-user"`. Setelah login Logto, user dapat `sub` baru → dashboard kosong. Perlu migrasi userId bila ingin data lama terbawa.
+
 ## Auth Logto: kode SIAP, tinggal isi env (2026-07-09)
 Panduan lengkap: `docs/logto-setup.md`. Yang dibangun:
 - **Jembatan token**: `app/api/logto/token/route.ts` (getAccessToken utk `LOGTO_API_RESOURCE`). `lib/api/http.ts` kini async — mode `logto` ambil token dari route itu (cache 60s, dibuang saat 401); mode `stub` tetap kirim `"dev"`. `apiFetch` TIDAK pernah dipanggil dari server component (sudah dicek) jadi fetch relatif aman.
