@@ -1,5 +1,18 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## apps/mobile: Expo SDK 57 + expo-router (2026-07-10)
+Kerangka jadi. `pnpm --filter @pelajarin/mobile start`. **Wajib** isi `EXPO_PUBLIC_API_URL` dgn IP LAN (ponsel tak bisa buka localhost).
+Struktur: `src/app/{_layout,index,masuk,daftar,beranda}.tsx` (expo-router mendukung `src/app`), `src/lib/{auth,tema}.ts`, `src/lib/api/{http,tokens,resources}.ts`, `src/components/ui.tsx`.
+- Token di **expo-secure-store** (Keychain/Keystore), bukan AsyncStorage. `http.ts` mencerminkan web: 401 → refresh diam-diam → ulangi sekali; `setOnSesiHabis()` melempar ke /masuk saat refresh ditolak.
+- Beranda memanggil `/me`, `/stats`, `/materials` — API yang SAMA, tanpa perubahan server.
+
+**JEBAKAN pnpm + React Native (mahal waktunya):**
+1. `expo install` memanggil `pnpm` dari PATH → gagal krn kita pakai corepack. Solusi: shim `pnpm.cmd` sementara di PATH.
+2. `metro.config.js` monorepo: set `watchFolders` + `nodeModulesPaths` + `unstable_enableSymlinks=true`. **JANGAN** set `disableHierarchicalLookup=true` — panduan Expo itu untuk npm/yarn (node_modules rata). pnpm menaruh dep tiap paket di `.pnpm/*/node_modules`, jadi mematikan lookup berjenjang bikin `expo` gagal menemukan `expo-modules-core`.
+3. Peer tak terhoist harus ditambah eksplisit: `@expo/metro-runtime`, `whatwg-fetch`.
+4. `pnpm-lock.yaml` EBUSY saat dev server jalan → hentikan dulu sebelum install.
+**Verifikasi**: typecheck ≠ cukup. `expo export --platform android` membundel sungguhan (2,8MB, 0 error) — itu yang menangkap ketiga masalah di atas. Belum pernah dijalankan di emulator/perangkat.
+
 ## Main ulang tanpa AI + prediksi soal interaktif (2026-07-10)
 - **Prediksi soal**: opsi dulu cuma dipajang. Kini bisa **diklik** → kunci jawaban hijau, pilihan salah merah, pembahasan muncul; skor berjalan + tombol Ulangi (state lokal, tak disimpan). Soal esai (tanpa opsi) → tombol "Lihat jawaban". Panel Pro "Analisis" dirombak: kunci jawaban DIHAPUS dari sana (kini gratis), diganti distribusi kesulitan + topik sering muncul + rekomendasi.
 - **Kuis**: dulu tersimpan di DB tapi UI tak pernah menampilkannya (`quizzesApi.list/get` ditulis tapi tak dipakai) → tiap ulang = generate baru = biaya AI. Kini fase `list` (riwayat: tanggal, jumlah soal, skor terakhir) → "Kerjakan" memuat dari DB **tanpa AI**. `PATCH /quizzes/:id/score` baru (kolom `Quiz.skor` dulu selalu null), skor dipangkas 0..jumlah soal.
