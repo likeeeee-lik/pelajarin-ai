@@ -16,7 +16,7 @@
       "package": "ai.pelajarin.app",
       "edgeToEdgeEnabled": true
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-secure-store"],
+    "plugins": ["expo-router", "expo-secure-store"],
     "experiments": {
       "typedRoutes": true
     }
