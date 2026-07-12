@@ -83,7 +83,7 @@ Upload materi (file / audio / video / YouTube) → AI ubah jadi **catatan, flash
 - Paginasi "1 / 5" dengan ‹ ›.
 
 ## 8. PROFIL (tab)
-- **Kartu header** (gradient oranye): avatar · "Likae" · "sefinalika@gmail.com" · badge "Free Plan".
+- **Kartu header** (gradient oranye): avatar · "{nama}" · "{email}" · badge "Free Plan".
 - **"Pengaturan Profil / Perbarui informasi akun kamu"**: Nama lengkap (editable) · Email (disabled, "Email terikat dengan akun dan tidak dapat diubah") · Bahasa Tampilan dropdown "🇮🇩 Bahasa Indonesia" ("Mengatur bahasa tampilan aplikasi").
 - **"Langganan / Status & penggunaan"**: "Anggota 5 Juli 2026". Kuota: **Catatan mingguan 0/1**, **Chat AI mingguan 0/0**. Tombol oranye "✨ Upgrade ke Pro".
 - **"Lainnya"**: "Streak & XP ›", "Pricing ›".

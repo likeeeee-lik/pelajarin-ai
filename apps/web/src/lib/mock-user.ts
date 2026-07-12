@@ -19,8 +19,8 @@ export interface MockUser {
 }
 
 export const MOCK_USER: MockUser = {
-  nama: "Likae",
-  email: "sefinalika@gmail.com",
+  nama: "Demo",
+  email: "demo@pelajarin.local",
   level: 1,
   xp: 0,
   xpToNext: 174,

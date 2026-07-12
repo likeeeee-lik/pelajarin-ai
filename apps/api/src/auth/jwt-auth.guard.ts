@@ -101,11 +101,12 @@ export class JwtAuthGuard implements CanActivate {
     return header.slice("Bearer ".length).trim() || null;
   }
 
+  /** User tiruan mode stub. Sengaja tanpa email nyata (repo publik). */
   private demoUser(): AuthUser {
     return {
       sub: "demo-user",
-      email: "sefinalika@gmail.com",
-      name: "Likae",
+      email: "demo@pelajarin.local",
+      name: "Demo",
     };
   }
 }
