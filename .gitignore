@@ -31,3 +31,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# artefak sementara pnpm (sisa rename yang gagal di Windows)
+pnpm-lock.yaml.*
