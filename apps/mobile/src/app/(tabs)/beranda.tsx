@@ -52,6 +52,11 @@ export default function BerandaScreen() {
   if (me.isLoading) return <Screen><Memuat /></Screen>;
 
   const s2 = stats.data;
+  // XP ke level berikutnya (kurva sederhana; gamifikasi nyata menyusul).
+  const xp = me.data?.xp ?? 0;
+  const xpTarget = (me.data?.level ?? 1) * 174;
+  const xpPct = Math.min(100, Math.round((xp / xpTarget) * 100));
+
   const kartu = [
     { label: "Flashcard", nilai: String(s2?.flashcards ?? 0), sub: "kartu", ...aksen.brand },
     { label: "Streak", nilai: `${me.data?.streakCurrent ?? 0}`, sub: "hari", ...aksen.merah },
@@ -83,21 +88,55 @@ export default function BerandaScreen() {
               {salam()}, {me.data?.nama} 👋
             </Text>
 
-            {/* Fokus AI hari ini */}
+            {/* Fokus AI hari ini + progres XP */}
             <View style={s.fokusCard}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Ionicons name="sparkles" size={16} color={tema.brand} />
-                <Text style={{ color: tema.brand, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
-                  FOKUS AI HARI INI
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Ionicons name="sparkles" size={16} color={tema.brand} />
+                    <Text style={{ color: tema.brand, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
+                      FOKUS AI HARI INI
+                    </Text>
+                  </View>
+                  <Text style={{ color: tema.teks, fontSize: 18, fontWeight: "800", marginTop: 8 }}>
+                    Satu sesi kecil, progres terasa.
+                  </Text>
+                  <Text style={{ color: tema.muted, marginTop: 4, fontSize: 13 }}>
+                    Upload file, audio, video, atau YouTube. Materi akan dirapikan jadi catatan belajar.
+                  </Text>
+                </View>
+                <View style={s.xpRing}>
+                  <Text style={{ color: tema.teks, fontWeight: "800", fontSize: 15 }}>{xpPct}%</Text>
+                  <Text style={{ color: tema.muted, fontSize: 10 }}>XP</Text>
+                </View>
+              </View>
+              <View style={{ marginTop: 12 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                  <Text style={{ color: tema.muted, fontSize: 11 }}>ke level berikutnya</Text>
+                  <Text style={{ color: tema.brand, fontSize: 11, fontWeight: "700" }}>
+                    {xp} / {xpTarget} XP
+                  </Text>
+                </View>
+                <View style={s.xpBarBg}>
+                  <View style={[s.xpBarFg, { width: `${xpPct}%` }]} />
+                </View>
+              </View>
+            </View>
+
+            {/* Banner upgrade */}
+            <Pressable onPress={() => router.push("/pricing")} style={s.upgradeBanner}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: tema.teks, fontWeight: "800", fontSize: 15 }}>
+                  Buka mode belajar tanpa batas
+                </Text>
+                <Text style={{ color: tema.muted, fontSize: 12, marginTop: 2 }}>
+                  Chat AI, chapter, dan prediksi ujian lebih lega.
                 </Text>
               </View>
-              <Text style={{ color: tema.teks, fontSize: 18, fontWeight: "800", marginTop: 8 }}>
-                Satu sesi kecil, progres terasa.
-              </Text>
-              <Text style={{ color: tema.muted, marginTop: 4 }}>
-                Upload file, audio, video, atau YouTube. Materi akan dirapikan jadi catatan belajar.
-              </Text>
-            </View>
+              <View style={s.upgradePanah}>
+                <Ionicons name="chevron-forward" size={18} color={tema.kuning} />
+              </View>
+            </Pressable>
 
             {/* 4 kartu statistik */}
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
@@ -229,6 +268,35 @@ const s = StyleSheet.create({
     borderColor: "rgba(249,115,22,0.3)",
     borderRadius: 18,
     padding: 16,
+  },
+  xpRing: {
+    height: 62,
+    width: 62,
+    borderRadius: 31,
+    borderWidth: 3,
+    borderColor: "rgba(249,115,22,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  xpBarBg: { height: 6, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" },
+  xpBarFg: { height: 6, backgroundColor: tema.brand, borderRadius: 3 },
+  upgradeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "rgba(234,179,8,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(234,179,8,0.35)",
+    borderRadius: 18,
+    padding: 16,
+  },
+  upgradePanah: {
+    height: 34,
+    width: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(234,179,8,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   statCard: {
     flexGrow: 1,

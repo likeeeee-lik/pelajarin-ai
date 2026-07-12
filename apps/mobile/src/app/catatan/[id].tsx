@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Markdown from "react-native-markdown-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   chaptersApi,
@@ -86,7 +87,11 @@ function BabTab({ material }: { material: Material }) {
           <Text style={{ color: tema.muted }}>Kembali ke daftar bab</Text>
         </Pressable>
         <Text style={{ color: tema.teks, fontSize: 20, fontWeight: "800", marginBottom: 12 }}>{babBuka.judul}</Text>
-        <Text style={{ color: tema.teks, lineHeight: 24 }}>{babBuka.kontenMd || "Bab ini masih kosong."}</Text>
+        {babBuka.kontenMd ? (
+          <Markdown style={md}>{babBuka.kontenMd}</Markdown>
+        ) : (
+          <Text style={{ color: tema.muted }}>Bab ini masih kosong.</Text>
+        )}
       </ScrollView>
     );
   }
@@ -400,6 +405,52 @@ function ChatTab({ materialId }: { materialId: string }) {
     </View>
   );
 }
+
+/** Gaya markdown untuk isi bab (tema gelap). */
+const md = StyleSheet.create({
+  body: { color: tema.teks, fontSize: 15, lineHeight: 24 },
+  heading1: { color: tema.teks, fontSize: 22, fontWeight: "800", marginTop: 12, marginBottom: 6 },
+  heading2: { color: tema.teks, fontSize: 19, fontWeight: "800", marginTop: 12, marginBottom: 6 },
+  heading3: { color: tema.teks, fontSize: 17, fontWeight: "700", marginTop: 10, marginBottom: 4 },
+  strong: { color: tema.teks, fontWeight: "800" },
+  em: { fontStyle: "italic" },
+  bullet_list_icon: { color: tema.brand },
+  ordered_list_icon: { color: tema.brand },
+  code_inline: {
+    backgroundColor: tema.card2,
+    color: tema.brand,
+    paddingHorizontal: 5,
+    borderRadius: 4,
+  },
+  fence: {
+    backgroundColor: tema.card2,
+    borderColor: tema.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    color: tema.teks,
+    padding: 12,
+  },
+  code_block: {
+    backgroundColor: tema.card2,
+    borderColor: tema.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    color: tema.teks,
+    padding: 12,
+  },
+  blockquote: {
+    backgroundColor: tema.card2,
+    borderLeftColor: tema.brand,
+    borderLeftWidth: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  hr: { backgroundColor: tema.border, height: 1 },
+  link: { color: tema.brand },
+  table: { borderColor: tema.border },
+  th: { color: tema.teks },
+  td: { color: tema.teks },
+});
 
 const s = StyleSheet.create({
   tabbar: { gap: 8, paddingHorizontal: 16, paddingVertical: 12 },

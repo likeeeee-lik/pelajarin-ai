@@ -17,7 +17,8 @@ export default function DaftarScreen() {
     setLoading(true);
     try {
       await daftar(nama.trim(), email.trim(), password);
-      router.replace("/beranda");
+      // User baru → wizard onboarding dulu.
+      router.replace("/onboarding");
     } catch (e) {
       setGalat(e instanceof Error ? e.message : "Gagal mendaftar");
       setLoading(false);

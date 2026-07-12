@@ -1,5 +1,8 @@
-import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { router, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { meApi } from "@/lib/api/resources";
 import { tema } from "@/lib/tema";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -13,6 +16,13 @@ function icon(name: IoniconName) {
 }
 
 export default function TabsLayout() {
+  const me = useQuery({ queryKey: ["me"], queryFn: meApi.get });
+
+  // User yang belum onboarding diarahkan ke wizard.
+  useEffect(() => {
+    if (me.data && !me.data.onboardingCompleted) router.replace("/onboarding");
+  }, [me.data]);
+
   return (
     <Tabs
       screenOptions={{
