@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { router } from "expo-router";
-import { Field, Galat, Tombol } from "@/components/ui";
+import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Field, FieldPassword, Galat, Tombol } from "@/components/ui";
 import { masuk } from "@/lib/auth";
 import { tema } from "@/lib/tema";
 
 export default function MasukScreen() {
-  const [email, setEmail] = useState("");
+  // Datang dari layar Daftar → tampilkan konfirmasi & isi emailnya.
+  const params = useLocalSearchParams<{ baru?: string; email?: string }>();
+  const baruDaftar = params.baru === "1";
+
+  const [email, setEmail] = useState(params.email ?? "");
   const [password, setPassword] = useState("");
   const [galat, setGalat] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,7 +21,8 @@ export default function MasukScreen() {
     setLoading(true);
     try {
       await masuk(email.trim(), password);
-      router.replace("/beranda");
+      // Splash menampilkan logo lalu menentukan tujuan (wizard / dashboard).
+      router.replace("/splash");
     } catch (e) {
       setGalat(e instanceof Error ? e.message : "Gagal masuk");
       setLoading(false);
@@ -31,6 +37,15 @@ export default function MasukScreen() {
           <Text style={{ color: tema.muted, fontSize: 14 }}>Lanjutkan belajar dengan AI</Text>
         </View>
 
+        {baruDaftar ? (
+          <View style={s.sukses}>
+            <Ionicons name="checkmark-circle" size={18} color="#34D399" />
+            <Text style={{ color: "#34D399", flex: 1, fontSize: 13 }}>
+              Akun berhasil dibuat. Masuk untuk melanjutkan.
+            </Text>
+          </View>
+        ) : null}
+
         <Field
           label="Email"
           value={email}
@@ -39,11 +54,10 @@ export default function MasukScreen() {
           textContentType="emailAddress"
           placeholder="name@example.com"
         />
-        <Field
+        <FieldPassword
           label="Password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
           textContentType="password"
           placeholder="Masukkan password"
         />
@@ -60,3 +74,16 @@ export default function MasukScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const s = {
+  sukses: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    backgroundColor: "rgba(16,185,129,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(16,185,129,0.4)",
+    borderRadius: 12,
+    padding: 12,
+  },
+};

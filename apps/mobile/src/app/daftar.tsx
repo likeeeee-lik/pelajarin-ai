@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { Field, Galat, Tombol } from "@/components/ui";
+import { Field, FieldPassword, Galat, Tombol } from "@/components/ui";
+import { hapusToken } from "@/lib/api/tokens";
 import { daftar } from "@/lib/auth";
 import { tema } from "@/lib/tema";
 
@@ -17,8 +18,10 @@ export default function DaftarScreen() {
     setLoading(true);
     try {
       await daftar(nama.trim(), email.trim(), password);
-      // User baru → wizard onboarding dulu.
-      router.replace("/onboarding");
+      // Registrasi mengembalikan token, tapi alurnya sengaja lewat login dulu:
+      // buang tokennya supaya user benar-benar masuk lewat layar Masuk.
+      await hapusToken();
+      router.replace({ pathname: "/masuk", params: { baru: "1", email: email.trim() } });
     } catch (e) {
       setGalat(e instanceof Error ? e.message : "Gagal mendaftar");
       setLoading(false);
@@ -42,11 +45,10 @@ export default function DaftarScreen() {
           textContentType="emailAddress"
           placeholder="name@example.com"
         />
-        <Field
+        <FieldPassword
           label="Password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
           textContentType="newPassword"
           placeholder="Min. 8 karakter, ada huruf & angka"
         />

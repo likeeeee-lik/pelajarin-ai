@@ -36,6 +36,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="masuk" options={{ headerShown: false }} />
           <Stack.Screen name="daftar" options={{ headerShown: false }} />
+          <Stack.Screen name="splash" options={{ headerShown: false, animation: "fade" }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="catatan/[id]" options={{ title: "Catatan" }} />
           <Stack.Screen name="prediksi/[id]" options={{ title: "Prediksi" }} />

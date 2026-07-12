@@ -1,5 +1,12 @@
 # Spesifikasi Mobile App (dari docs/ss/app, 38 layar) — dibaca 2026-07-10
 
+## ALUR AUTH MOBILE — DIPUTUSKAN USER (2026-07-12, saat tes di HP)
+**Urutan wajib: Daftar → (balik ke) Masuk → Splash logo → Wizard → Dashboard.**
+- Registrasi **sengaja TIDAK auto-login**: API tetap mengembalikan token, tapi `daftar.tsx` memanggil `hapusToken()` lalu `router.replace("/masuk", {baru:"1", email})`. Layar Masuk menampilkan banner hijau "Akun berhasil dibuat" + email terisi otomatis.
+- Login sukses → `/splash` (bukan langsung dashboard). `splash.tsx`: logo SVG + animasi, tampil **minimal 1400ms**, sambil ambil `/me` → arahkan ke `/onboarding` (bila `onboardingCompleted=false`) atau `/beranda`.
+- Logo: `src/components/logo.tsx` pakai **react-native-svg**, path SAMA dengan `apps/web/src/components/logo.tsx`.
+- Password: komponen **`FieldPassword`** di `components/ui.tsx` — ada ikon mata (eye/eye-off) untuk lihat/sembunyikan. Dipakai di masuk & daftar.
+
 ## STATUS BUILD (2026-07-11): fase 1–5 SELESAI (commit 20ebe9e)
 Semua 5 tab + alur dibangun & terverifikasi (tsc bersih, bundle Metro 3,19MB, BELUM diuji perangkat):
 - `(tabs)/beranda` (sapaan, chip streak/lvl/xp, fokus card, 4 kartu statistik, Koleksi + filter, FAB)

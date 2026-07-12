@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { tema } from "@/lib/tema";
 
 export function Screen({
@@ -34,6 +36,28 @@ export function Field({ label, ...props }: TextInputProps & { label?: string }) 
     <View style={{ gap: 6 }}>
       {label ? <Text style={s.label}>{label}</Text> : null}
       <TextInput placeholderTextColor={tema.muted} style={s.input} autoCapitalize="none" {...props} />
+    </View>
+  );
+}
+
+/** Kotak password dengan tombol mata untuk melihat/menyembunyikan isinya. */
+export function FieldPassword({ label, ...props }: TextInputProps & { label?: string }) {
+  const [lihat, setLihat] = useState(false);
+  return (
+    <View style={{ gap: 6 }}>
+      {label ? <Text style={s.label}>{label}</Text> : null}
+      <View style={s.inputWrap}>
+        <TextInput
+          placeholderTextColor={tema.muted}
+          style={s.inputPolos}
+          autoCapitalize="none"
+          secureTextEntry={!lihat}
+          {...props}
+        />
+        <Pressable onPress={() => setLihat((v) => !v)} hitSlop={12} style={{ paddingLeft: 8 }}>
+          <Ionicons name={lihat ? "eye-off-outline" : "eye-outline"} size={20} color={tema.muted} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -117,6 +141,16 @@ const s = StyleSheet.create({
     color: tema.teks,
     fontSize: 15,
   },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: tema.card,
+    borderWidth: 1,
+    borderColor: tema.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+  },
+  inputPolos: { flex: 1, paddingVertical: 14, color: tema.teks, fontSize: 15 },
   tombol: { borderRadius: 16, paddingVertical: 15, alignItems: "center", justifyContent: "center" },
   tombolTeks: { color: "#fff", fontWeight: "700", fontSize: 15 },
   galat: {
