@@ -13,6 +13,7 @@ Folder ini adalah **memori bersama untuk AI (Claude Code)** yang di-commit ke re
 | File | Fungsi |
 |---|---|
 | `mobile-app-spec.md` | **MOBILE (terkini)**: 38 layar `docs/ss/app/` sudah diringkas, status build, urutan FINAL. |
+| `mobile-upload-spec.md` | **Alur unggah materi mobile**: 8 layar `docs/ss/app/homepage/` (bottom sheet 4 sumber → wizard 2 langkah → kartu progres). |
 | `app-spec.md` | Spec produk lama & lebih luas (konsep, gamifikasi, freemium). Sebagian alur usang. |
 | `web-spec.md` | Spesifikasi versi **WEB** (landing, auth server OIDC, dashboard sidebar). Sumber `docs/ss/web/`. |
 | `onboarding-spec.md` | Onboarding 20 langkah / 5 fase + radar chart hasil (web). |

@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { materialsApi, meApi, statsApi } from "@/lib/api/resources";
 import type { MaterialSummary, MaterialType } from "@/lib/api/types";
+import { SheetSumber } from "@/components/sheet-sumber";
 import { Memuat, Screen } from "@/components/ui";
 import { aksen, tema } from "@/lib/tema";
 
@@ -39,6 +40,7 @@ export default function BerandaScreen() {
 
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"semua" | MaterialType>("semua");
+  const [sheet, setSheet] = useState(false);
 
   const daftar = useMemo(() => {
     const src = materials.data ?? [];
@@ -192,7 +194,7 @@ export default function BerandaScreen() {
         renderItem={({ item }) => <MateriBaris item={item} />}
         ListEmptyComponent={
           materials.isLoading ? null : (
-            <Pressable onPress={() => router.push("/buat-materi")} style={s.emptyCard}>
+            <Pressable onPress={() => setSheet(true)} style={s.emptyCard}>
               <Ionicons name="documents-outline" size={28} color={tema.brand} />
               <Text style={{ color: tema.teks, fontWeight: "700", marginTop: 8 }}>Mulai dari satu materi</Text>
               <Text style={{ color: tema.muted, textAlign: "center", marginTop: 4, fontSize: 13 }}>
@@ -203,10 +205,19 @@ export default function BerandaScreen() {
         }
       />
 
-      {/* FAB buat materi */}
-      <Pressable onPress={() => router.push("/buat-materi")} style={s.fab}>
+      {/* FAB → bottom sheet pilih sumber (ss homepage/kategori upload) */}
+      <Pressable onPress={() => setSheet(true)} style={s.fab}>
         <Ionicons name="add" size={30} color="#fff" />
       </Pressable>
+
+      <SheetSumber
+        buka={sheet}
+        onTutup={() => setSheet(false)}
+        onPilih={(sumber) => {
+          setSheet(false);
+          router.push({ pathname: "/buat-materi", params: { sumber } });
+        }}
+      />
     </Screen>
   );
 }

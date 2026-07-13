@@ -50,6 +50,12 @@ export const materialsApi = {
     subjectId?: string;
     sourceUrl?: string;
     rawText?: string;
+    /** kilat | standar | lengkap */
+    modeBelajar?: string;
+    /** santai | formal | kreatif | akademis */
+    gayaPenulisan?: string;
+    /** id | en | ar | zh */
+    bahasa?: string;
   }) => apiFetch<Material>("/materials", { method: "POST", body: JSON.stringify(input) }),
   upload: (form: FormData) => apiFetch<Material>("/materials/upload", { method: "POST", body: form }),
   remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
