@@ -1,5 +1,11 @@
 # Spesifikasi App — Pelajarin.ai
 
+> ⚠️ **Untuk MOBILE yang sedang dibangun, baca `mobile-app-spec.md`** — di sana ada
+> status build terkini, urutan layar FINAL, dan catatan implementasi. Berkas ini
+> adalah spec produk yang lebih luas (konsep, gamifikasi, freemium) dan sebagian
+> alurnya sudah usang (mis. auth masih menyebut OIDC/Logto; kita sekarang pakai
+> auth lokal email+password).
+
 > Hasil analisis lengkap screenshot `docs/ss/`. **Ini sumber kebenaran UI & flow — tidak perlu buka screenshot lagi.**
 > Nama produk: **pelajarin.ai**. Bahasa: Indonesia (ada opsi EN). Tema: gelap. Aksen: oranye.
 > Logo: buku terbuka dengan wajah senyum + bookmark berbentuk seperti pin lokasi.

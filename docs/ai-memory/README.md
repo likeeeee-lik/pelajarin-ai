@@ -4,10 +4,16 @@ Folder ini adalah **memori bersama untuk AI (Claude Code)** yang di-commit ke re
 - Claude **tidak perlu membuka ulang screenshot** di `docs/ss/` lebih dari sekali.
 - PC / mesin lain yang mengerjakan project ini bisa **memuat konteks yang sama** (cukup baca folder ini).
 
+## Mulai dari mana? (baca berurutan)
+1. **`decisions.md`** — keputusan stack & arsitektur, status tiap fitur. Paling penting.
+2. **`mobile-app-spec.md`** — status build mobile + **urutan layar FINAL** (jangan diubah).
+3. Sisanya sesuai kebutuhan.
+
 ## Isi
 | File | Fungsi |
 |---|---|
-| `app-spec.md` | Spesifikasi tiap layar versi **MOBILE** (bottom-tab). Sumber `docs/ss/app/`. |
+| `mobile-app-spec.md` | **MOBILE (terkini)**: 38 layar `docs/ss/app/` sudah diringkas, status build, urutan FINAL. |
+| `app-spec.md` | Spec produk lama & lebih luas (konsep, gamifikasi, freemium). Sebagian alur usang. |
 | `web-spec.md` | Spesifikasi versi **WEB** (landing, auth server OIDC, dashboard sidebar). Sumber `docs/ss/web/`. |
 | `onboarding-spec.md` | Onboarding 20 langkah / 5 fase + radar chart hasil (web). |
 | `note-workspace-spec.md` | **Fitur inti**: upload→AI→catatan berbab, mind map, flashcards, kuis, chat, prediksi soal + gating Free/Pro. Sumber `docs/ss/web/userDashboard/`. |

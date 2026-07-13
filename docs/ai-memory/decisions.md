@@ -1,5 +1,17 @@
 # Keputusan & Aturan Kerja — Pelajarin.ai
 
+## URUTAN LAYAR MOBILE — FINAL (2026-07-12)
+**Daftar → Masuk → Splash → Wizard → Dashboard.**
+Ditanyakan langsung ke user & dipilih olehnya. **SENGAJA berbeda** dari penomoran folder
+`docs/ss/app` (ss 1–20 = wizard, seolah wizard duluan) dan **berbeda dari web** (web:
+wizard dulu baru daftar). **Jangan "perbaiki" agar cocok nomor folder** — itu justru salah.
+Detail implementasi: `mobile-app-spec.md`.
+
+## ATURAN: sync `docs/ai-memory/` SEBELUM setiap push
+Sudah tertulis di `docs/ai-memory/README.md`. Praktiknya: setiap ada keputusan/pemahaman
+baru → tulis ke folder ini → baru `git commit && git push`. Tujuannya PC/mesin lain cukup
+membaca folder ini untuk punya konteks yang sama, tanpa membuka ulang screenshot.
+
 ## apps/mobile: Expo SDK 57 + expo-router (2026-07-10)
 Kerangka jadi. `pnpm --filter @pelajarin/mobile start`. **Wajib** isi `EXPO_PUBLIC_API_URL` dgn IP LAN (ponsel tak bisa buka localhost).
 Struktur: `src/app/{_layout,index,masuk,daftar,beranda}.tsx` (expo-router mendukung `src/app`), `src/lib/{auth,tema}.ts`, `src/lib/api/{http,tokens,resources}.ts`, `src/components/ui.tsx`.

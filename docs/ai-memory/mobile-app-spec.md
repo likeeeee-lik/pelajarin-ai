@@ -1,5 +1,22 @@
 # Spesifikasi Mobile App (dari docs/ss/app, 38 layar) — dibaca 2026-07-10
 
+> **38 layar sudah dibaca & diringkas di berkas ini. JANGAN buka ulang screenshot-nya.**
+> Kalau butuh detail layar, baca dari sini. Buka `docs/ss/app` hanya bila ada
+> layar yang benar-benar belum tercatat (mis. ss 34/36).
+
+## ⚠️ URUTAN APP — SUDAH FINAL, JANGAN DIUBAH LAGI (dikonfirmasi user 2026-07-12)
+
+**Daftar → Masuk → Splash → Wizard → Dashboard**
+
+**Ini SENGAJA BERBEDA dari penomoran folder `docs/ss/app`** (yang menaruh wizard di
+ss 1–20, artinya sebelum auth) dan **berbeda dari web** (web = wizard dulu baru
+daftar). User ditanya langsung dan **memilih urutan mobile ini**. Jangan "perbaiki"
+agar cocok dengan nomor folder — itu justru salah.
+
+| | Web | Mobile |
+|---|---|---|
+| Urutan | Wizard → Daftar → App | Daftar → Masuk → Splash → Wizard → App |
+
 ## ALUR AUTH MOBILE — DIPUTUSKAN USER (2026-07-12, saat tes di HP)
 **Urutan wajib: Daftar → (balik ke) Masuk → Splash logo → Wizard → Dashboard.**
 - Registrasi **sengaja TIDAK auto-login**: API tetap mengembalikan token, tapi `daftar.tsx` memanggil `hapusToken()` lalu `router.replace("/masuk", {baru:"1", email})`. Layar Masuk menampilkan banner hijau "Akun berhasil dibuat" + email terisi otomatis.
@@ -7,15 +24,15 @@
 - Logo: `src/components/logo.tsx` pakai **react-native-svg**, path SAMA dengan `apps/web/src/components/logo.tsx`.
 - Password: komponen **`FieldPassword`** di `components/ui.tsx` — ada ikon mata (eye/eye-off) untuk lihat/sembunyikan. Dipakai di masuk & daftar.
 
-## STATUS BUILD (2026-07-11): fase 1–5 SELESAI (commit 20ebe9e)
-Semua 5 tab + alur dibangun & terverifikasi (tsc bersih, bundle Metro 3,19MB, BELUM diuji perangkat):
-- `(tabs)/beranda` (sapaan, chip streak/lvl/xp, fokus card, 4 kartu statistik, Koleksi + filter, FAB)
-- `(tabs)/mata-pelajaran` (tambah/hapus + statistik) · `(tabs)/ujian` (list prediksi)
-- `buat-prediksi` (2 langkah, picker mapel + expo-document-picker) · `prediksi/[id]` (opsi interaktif + kunci/pembahasan)
-- `buat-materi` (file/youtube/note) · `catatan/[id]` (workspace 5 sub-tab: Bab/MindMap/Flashcard/Kuis/Chat, semua lewat endpoint AI nyata, kuis replay dari DB + simpan skor)
-- `(tabs)/profil` (edit nama PATCH /me, kuota, keluar) · `pricing` (placeholder, bayar belum ada) · `(tabs)/peringkat` (placeholder, gamifikasi belum ada)
-Token di expo-secure-store; http.ts refresh senyap saat 401. expo-router grup + typed routes.
-BELUM: onboarding wizard di mobile (logika ada di API), Google OAuth, markdown render (kontenMd tampil teks polos), gamifikasi nyata, pembayaran.
+## STATUS BUILD (per 2026-07-12, commit 27b7a9c) — SEDANG DIUJI DI HP
+Layar (17): `masuk` `daftar` `splash` `onboarding` · 5 tab (`beranda` `mata-pelajaran` `ujian` `peringkat` `profil`) · `buat-materi` `catatan/[id]` `buat-prediksi` `prediksi/[id]` `pricing` `index` + 2 `_layout`.
+- `catatan/[id]` = workspace 5 sub-tab (Bab/MindMap/Flashcard/Kuis/Chat), semua lewat endpoint AI nyata (Claude). Kuis bisa diulang dari DB tanpa panggil AI + skor tersimpan.
+- `onboarding` = wizard 20 pertanyaan, 6 jenis input (single/scale/dual/semantic/capsule/curve) + layar hasil 8 skor radar. **Pertanyaan DISALIN** ke `src/lib/onboarding/` (web pakai ikon Lucide yg tak jalan di RN) → **TODO(shared): satukan ke packages/shared; sampai itu, UBAH DI KEDUA TEMPAT.**
+- Markdown isi bab: `react-native-markdown-display` (sudah, tidak lagi teks polos).
+- Token di expo-secure-store; `http.ts` refresh senyap saat 401. expo-router grup + typed routes.
+- Paket kunci: `@react-native-community/slider`, `react-native-svg` (logo), `expo-document-picker`, `@expo/vector-icons`.
+
+**BELUM ADA**: Google OAuth (dibuang bersama Logto — harus dibangun sendiri: endpoint `/auth/google` + expo-auth-session, kemungkinan butuh development build, bukan Expo Go) · gamifikasi nyata (XP/streak/leaderboard masih mock) · pembayaran · verifikasi email di mobile (cuma banner "buka web") · ikon search Beranda masih hiasan.
 
 ## Spesifikasi asli (dari 38 layar)
 
