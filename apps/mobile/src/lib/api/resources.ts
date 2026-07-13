@@ -5,6 +5,8 @@ import type {
   ChatSession,
   ExamPrediction,
   Flashcard,
+  LeaderboardResult,
+  LeaderboardSort,
   Material,
   MaterialSummary,
   MindMap,
@@ -27,6 +29,10 @@ export const meApi = {
 
 export const statsApi = {
   get: () => apiFetch<UserStats>("/stats"),
+};
+
+export const leaderboardApi = {
+  top: (sort: LeaderboardSort) => apiFetch<LeaderboardResult>(`/leaderboard?sort=${sort}`),
 };
 
 export const subjectsApi = {

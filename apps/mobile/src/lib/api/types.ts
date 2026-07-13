@@ -22,6 +22,24 @@ export interface Profile {
   onboardingCompleted: boolean;
 }
 
+export type LeaderboardSort = "xp" | "streak";
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  nama: string;
+  avatarUrl: string | null;
+  level: number;
+  xp: number;
+  streak: number;
+  aku: boolean;
+}
+export interface LeaderboardResult {
+  sort: LeaderboardSort;
+  entries: LeaderboardEntry[];
+  akuRank: number | null;
+  total: number;
+}
+
 export interface UserStats {
   materials: number;
   flashcards: number;

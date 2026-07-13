@@ -15,6 +15,7 @@ import { FlashcardsModule } from "./flashcards/flashcards.module";
 import { QuizzesModule } from "./quizzes/quizzes.module";
 import { ChatModule } from "./chat/chat.module";
 import { PredictionsModule } from "./predictions/predictions.module";
+import { LeaderboardModule } from "./leaderboard/leaderboard.module";
 import { StatsModule } from "./stats/stats.module";
 
 @Module({
@@ -34,6 +35,7 @@ import { StatsModule } from "./stats/stats.module";
     QuizzesModule,
     ChatModule,
     PredictionsModule,
+    LeaderboardModule,
     StatsModule,
   ],
   controllers: [HealthController],

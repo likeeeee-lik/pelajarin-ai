@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { meApi, statsApi } from "@/lib/api/resources";
 import { keluar } from "@/lib/auth";
@@ -9,6 +10,9 @@ import { Field, Memuat, Screen, Tombol } from "@/components/ui";
 import { tema } from "@/lib/tema";
 
 const PLAN_LABEL: Record<string, string> = { free: "Free Plan", pro: "Pro", institusi: "Institusi" };
+
+/** Versi diambil dari app.json — bukan angka hardcode yang gampang basi. */
+const version = Constants.expoConfig?.version ?? "0.0.0";
 
 export default function ProfilScreen() {
   const qc = useQueryClient();
@@ -108,14 +112,47 @@ export default function ProfilScreen() {
           </View>
         </View>
 
+        {/* Lainnya */}
+        <View style={[s.card, { paddingVertical: 6 }]}>
+          <BarisMenu
+            ikon="flame"
+            judul="Streak & XP"
+            onPress={() => router.push("/peringkat")}
+          />
+          <View style={s.pemisah} />
+          <BarisMenu ikon="sparkles" judul="Pricing" onPress={() => router.push("/pricing")} />
+        </View>
+
         <Pressable onPress={konfirmasiKeluar} style={s.keluar}>
           <Ionicons name="log-out-outline" size={18} color={tema.merah} />
           <Text style={{ color: tema.merah, fontWeight: "700" }}>Keluar</Text>
         </Pressable>
 
-        <Text style={{ color: tema.muted, textAlign: "center", fontSize: 12 }}>Pelajarin.ai</Text>
+        <Text style={{ color: tema.muted, textAlign: "center", fontSize: 12 }}>
+          Pelajarin.ai · versi {version}
+        </Text>
       </ScrollView>
     </Screen>
+  );
+}
+
+function BarisMenu({
+  ikon,
+  judul,
+  onPress,
+}: {
+  ikon: React.ComponentProps<typeof Ionicons>["name"];
+  judul: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={s.menu}>
+      <View style={s.menuIkon}>
+        <Ionicons name={ikon} size={16} color={tema.brand} />
+      </View>
+      <Text style={{ color: tema.teks, fontWeight: "600", flex: 1 }}>{judul}</Text>
+      <Ionicons name="chevron-forward" size={18} color={tema.muted} />
+    </Pressable>
   );
 }
 
@@ -202,4 +239,14 @@ const s = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 15,
   },
+  menu: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14 },
+  menuIkon: {
+    height: 34,
+    width: 34,
+    borderRadius: 10,
+    backgroundColor: "rgba(249,115,22,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pemisah: { height: 1, backgroundColor: tema.border },
 });
