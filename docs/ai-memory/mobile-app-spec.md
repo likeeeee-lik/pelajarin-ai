@@ -4,18 +4,26 @@
 > Kalau butuh detail layar, baca dari sini. Buka `docs/ss/app` hanya bila ada
 > layar yang benar-benar belum tercatat (mis. ss 34/36).
 
-## ⚠️ URUTAN APP — SUDAH FINAL, JANGAN DIUBAH LAGI (dikonfirmasi user 2026-07-12)
+## ⚠️ URUTAN APP — FINAL (direvisi 2026-07-12, ikut penomoran folder)
 
-**Daftar → Masuk → Splash → Wizard → Dashboard**
+**Buka app → Wizard 20 pertanyaan (ANONIM) → Hasil → Welcome/Buat akun → Masuk → Splash → Dashboard**
 
-**Ini SENGAJA BERBEDA dari penomoran folder `docs/ss/app`** (yang menaruh wizard di
-ss 1–20, artinya sebelum auth) dan **berbeda dari web** (web = wizard dulu baru
-daftar). User ditanya langsung dan **memilih urutan mobile ini**. Jangan "perbaiki"
-agar cocok dengan nomor folder — itu justru salah.
+Persis penomoran `docs/ss/app`: ss 1–20 wizard · ss 21 welcome · ss 22–23 login · ss 24 splash · ss 25+ app.
+**Sama dengan funnel web** (onboarding sebelum daftar).
 
-| | Web | Mobile |
-|---|---|---|
-| Urutan | Wizard → Daftar → App | Daftar → Masuk → Splash → Wizard → App |
+RIWAYAT (jangan diulang): sempat dibuat "Daftar → Masuk → Splash → Wizard" pada 2026-07-12
+pagi karena user meminta lisan; sore user mengoreksi → **ikuti urutan folder**. Sekarang final.
+
+Implementasi funnel anonim:
+- `index.tsx`: ada sesi → `/beranda`; belum → `/onboarding`.
+- `onboarding.tsx` jalan TANPA login. Selesai/Lewati:
+  - sudah login → `PATCH /me {onboardingCompleted:true}` → `/beranda`
+  - belum login → simpan penanda `pendingOnboarding` (expo-secure-store) → `/welcome`
+- `welcome.tsx` (ss 21): logo + "Buat akun" + "Sudah punya akun? Masuk". (Tombol Google TIDAK
+  ditampilkan — belum ada OAuth; tombol mati lebih buruk daripada tidak ada.)
+- `splash.tsx` = titik keputusan: ambil `/me`; bila ada penanda pending → PATCH selesai +
+  hapus penanda → `/beranda`. Bila `onboardingCompleted=false` → `/onboarding`. Selain itu → `/beranda`.
+- Gate di `(tabs)/_layout.tsx` **DIHAPUS** — splash yang memutuskan, supaya tak ada loop.
 
 ## ALUR AUTH MOBILE — DIPUTUSKAN USER (2026-07-12, saat tes di HP)
 **Urutan wajib: Daftar → (balik ke) Masuk → Splash logo → Wizard → Dashboard.**

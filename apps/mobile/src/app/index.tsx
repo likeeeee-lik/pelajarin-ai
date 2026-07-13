@@ -4,12 +4,15 @@ import { Redirect } from "expo-router";
 import { adaSesi } from "@/lib/auth";
 import { tema } from "@/lib/tema";
 
-/** Rute awal: arahkan ke tab bila ada sesi, atau ke masuk. */
+/**
+ * Rute awal. Sesuai urutan referensi (docs/ss/app): pengunjung baru langsung
+ * masuk wizard onboarding — akun dibuat SETELAH wizard, bukan sebelumnya.
+ */
 export default function Index() {
-  const [tujuan, setTujuan] = useState<"/beranda" | "/masuk" | null>(null);
+  const [tujuan, setTujuan] = useState<"/beranda" | "/onboarding" | null>(null);
 
   useEffect(() => {
-    adaSesi().then((punya) => setTujuan(punya ? "/beranda" : "/masuk"));
+    adaSesi().then((punya) => setTujuan(punya ? "/beranda" : "/onboarding"));
   }, []);
 
   if (!tujuan) {

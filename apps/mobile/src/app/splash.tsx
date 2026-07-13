@@ -3,6 +3,7 @@ import { Animated, Easing, Text, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { meApi } from "@/lib/api/resources";
+import { ambilOnboardingPending } from "@/lib/api/tokens";
 import { LogoMark } from "@/components/logo";
 import { tema } from "@/lib/tema";
 
@@ -35,11 +36,17 @@ export default function SplashScreen() {
     (async () => {
       let tujuan: "/onboarding" | "/beranda" = "/beranda";
       try {
-        const p = await meApi.get();
+        // Wizard dikerjakan sebelum akun ada → kirim hasilnya sekarang.
+        const pending = await ambilOnboardingPending();
+        let p = await meApi.get();
+        if (pending && !p.onboardingCompleted) {
+          p = await meApi.update({ onboardingCompleted: true });
+        }
         qc.setQueryData(["me"], p);
+        // Akun lama yang belum pernah onboarding → kerjakan wizard dulu.
         if (!p.onboardingCompleted) tujuan = "/onboarding";
       } catch {
-        /* biarkan; gate di tab akan menangani */
+        /* jangan jebak user bila API bermasalah */
       }
       await tunggu; // jangan lompat sebelum logo sempat terlihat
       if (!batal) router.replace(tujuan);

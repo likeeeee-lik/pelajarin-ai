@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useQueryClient } from "@tanstack/react-query";
 import { meApi } from "@/lib/api/resources";
+import { tandaiOnboardingSelesai } from "@/lib/api/tokens";
+import { adaSesi } from "@/lib/auth";
 import { activeQuestions } from "@/lib/onboarding/questions";
 import { computeRadar, RADAR_AXES } from "@/lib/onboarding/scoring";
 import type { Answers, Question } from "@/lib/onboarding/types";
@@ -42,7 +44,18 @@ export default function OnboardingScreen() {
 
   const set = (key: string, v: Answers[string]) => setAnswers((p) => ({ ...p, [key]: v }));
 
+  /**
+   * Selesai / Lewati.
+   * - Belum punya akun (funnel normal): simpan penanda lokal → lanjut buat akun.
+   *   Splash yang mengirim `onboardingCompleted` ke server setelah login.
+   * - Sudah login (mis. akun lama yang belum onboarding): kirim langsung.
+   */
   async function tuntas() {
+    if (!(await adaSesi())) {
+      await tandaiOnboardingSelesai();
+      router.replace("/welcome");
+      return;
+    }
     try {
       const p = await meApi.update({ onboardingCompleted: true });
       qc.setQueryData(["me"], p);
@@ -85,7 +98,10 @@ export default function OnboardingScreen() {
             })}
           </View>
 
-          <Tombol judul="Mulai Belajar" onPress={tuntas} />
+          <Tombol judul="Lanjut Buat Akun" onPress={tuntas} />
+          <Text style={{ color: tema.muted, fontSize: 12, textAlign: "center" }}>
+            Profil ini akan tersimpan di akunmu.
+          </Text>
         </ScrollView>
       </Screen>
     );

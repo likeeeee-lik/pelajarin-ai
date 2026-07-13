@@ -28,3 +28,23 @@ export async function hapusToken() {
     SecureStore.deleteItemAsync(REFRESH),
   ]);
 }
+
+/**
+ * Funnel: wizard dikerjakan SEBELUM punya akun, jadi `onboardingCompleted` belum
+ * bisa disimpan ke server. Tandai lokal; splash yang mengirimkannya setelah login.
+ */
+const PENDING = "pelajarin_onboarding_pending";
+
+export function tandaiOnboardingSelesai() {
+  return SecureStore.setItemAsync(PENDING, "1");
+}
+
+/** Baca sekali lalu hapus. */
+export async function ambilOnboardingPending(): Promise<boolean> {
+  const v = await SecureStore.getItemAsync(PENDING);
+  if (v === "1") {
+    await SecureStore.deleteItemAsync(PENDING);
+    return true;
+  }
+  return false;
+}
