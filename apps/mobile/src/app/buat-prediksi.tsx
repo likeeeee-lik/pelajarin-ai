@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { predictionsApi, subjectsApi } from "@/lib/api/resources";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { predictionsApi } from "@/lib/api/resources";
 import type { ExamType } from "@/lib/api/types";
+import { PilihMapel } from "@/components/pilih-mapel";
 import { Field, Screen, Tombol } from "@/components/ui";
 import { tema } from "@/lib/tema";
 
@@ -20,16 +21,12 @@ type Berkas = { uri: string; name: string; mimeType: string };
 
 export default function BuatPrediksiScreen() {
   const qc = useQueryClient();
-  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
 
   const [langkah, setLangkah] = useState<1 | 2>(1);
   const [judul, setJudul] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [tipe, setTipe] = useState<ExamType>("uts");
   const [files, setFiles] = useState<Berkas[]>([]);
-  const [pickerBuka, setPickerBuka] = useState(false);
-
-  const mapel = subjects.data?.find((x) => x.id === subjectId)?.nama ?? "";
 
   const buat = useMutation({
     mutationFn: async () => {
@@ -84,13 +81,7 @@ export default function BuatPrediksiScreen() {
           <>
             <Field label="Judul Koleksi" value={judul} onChangeText={setJudul} placeholder="Contoh: UTS Kalkulus 2024" />
 
-            <View style={{ gap: 6 }}>
-              <Text style={{ color: tema.muted, fontSize: 13 }}>Mata Pelajaran</Text>
-              <Pressable onPress={() => setPickerBuka(true)} style={s.pickerBtn}>
-                <Text style={{ color: mapel ? tema.teks : tema.muted }}>{mapel || "Pilih mata pelajaran..."}</Text>
-                <Ionicons name="swap-vertical" size={18} color={tema.muted} />
-              </Pressable>
-            </View>
+            <PilihMapel value={subjectId} onChange={setSubjectId} label="Mata Pelajaran" />
 
             <View style={{ gap: 8 }}>
               <Text style={{ color: tema.muted, fontSize: 13 }}>Tipe Ujian</Text>
@@ -177,67 +168,7 @@ export default function BuatPrediksiScreen() {
         )}
       </ScrollView>
 
-      <PickerMapel
-        buka={pickerBuka}
-        onTutup={() => setPickerBuka(false)}
-        onPilih={(id) => {
-          setSubjectId(id);
-          setPickerBuka(false);
-        }}
-      />
     </Screen>
-  );
-}
-
-function PickerMapel({ buka, onTutup, onPilih }: { buka: boolean; onTutup: () => void; onPilih: (id: string) => void }) {
-  const qc = useQueryClient();
-  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
-  const [nama, setNama] = useState("");
-  const buat = useMutation({
-    mutationFn: () => subjectsApi.create(nama.trim()),
-    onSuccess: (s) => {
-      qc.invalidateQueries({ queryKey: ["subjects"] });
-      setNama("");
-      onPilih(s.id);
-    },
-  });
-
-  return (
-    <Modal visible={buka} transparent animationType="slide" onRequestClose={onTutup}>
-      <Pressable style={s.modalBg} onPress={onTutup} />
-      <View style={s.modalCard}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <Text style={{ color: tema.teks, fontSize: 18, fontWeight: "800" }}>Pilih Mata Pelajaran</Text>
-          <Pressable onPress={onTutup} hitSlop={10}>
-            <Ionicons name="close" size={22} color={tema.muted} />
-          </Pressable>
-        </View>
-        <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Field value={nama} onChangeText={setNama} placeholder="Buat baru..." autoCapitalize="words" />
-          </View>
-          <Pressable
-            onPress={() => nama.trim() && buat.mutate()}
-            style={[s.plusBtn, !nama.trim() && { opacity: 0.4 }]}
-          >
-            <Ionicons name="add" size={22} color="#fff" />
-          </Pressable>
-        </View>
-        <ScrollView style={{ maxHeight: 260 }}>
-          {(subjects.data ?? []).map((sub) => (
-            <Pressable key={sub.id} onPress={() => onPilih(sub.id)} style={s.mapelBaris}>
-              <Ionicons name="folder-outline" size={18} color={tema.muted} />
-              <Text style={{ color: tema.teks }}>{sub.nama}</Text>
-            </Pressable>
-          ))}
-          {(subjects.data ?? []).length === 0 ? (
-            <Text style={{ color: tema.muted, textAlign: "center", paddingVertical: 20 }}>
-              Belum ada mata pelajaran. Buat baru di atas.
-            </Text>
-          ) : null}
-        </ScrollView>
-      </View>
-    </Modal>
   );
 }
 

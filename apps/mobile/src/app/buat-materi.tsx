@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { materialsApi, subjectsApi } from "@/lib/api/resources";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { materialsApi } from "@/lib/api/resources";
+import { PilihMapel } from "@/components/pilih-mapel";
 import { Field, Screen, Tombol } from "@/components/ui";
 import { tema } from "@/lib/tema";
 
@@ -19,7 +20,6 @@ const SUMBER: { key: Sumber; label: string; ikon: React.ComponentProps<typeof Io
 
 export default function BuatMateriScreen() {
   const qc = useQueryClient();
-  const subjects = useQuery({ queryKey: ["subjects"], queryFn: subjectsApi.list });
 
   const [sumber, setSumber] = useState<Sumber>("file");
   const [judul, setJudul] = useState("");
@@ -27,9 +27,6 @@ export default function BuatMateriScreen() {
   const [file, setFile] = useState<Berkas | null>(null);
   const [url, setUrl] = useState("");
   const [teks, setTeks] = useState("");
-  const [pickerBuka, setPickerBuka] = useState(false);
-
-  const mapel = subjects.data?.find((x) => x.id === subjectId)?.nama ?? "";
 
   const buat = useMutation({
     mutationFn: async () => {
@@ -103,13 +100,7 @@ export default function BuatMateriScreen() {
 
         <Field label="Judul" value={judul} onChangeText={setJudul} placeholder="Judul materi" />
 
-        <View style={{ gap: 6 }}>
-          <Text style={{ color: tema.muted, fontSize: 13 }}>Mata Pelajaran (opsional)</Text>
-          <Pressable onPress={() => setPickerBuka(true)} style={s.pickerBtn}>
-            <Text style={{ color: mapel ? tema.teks : tema.muted }}>{mapel || "Pilih mata pelajaran..."}</Text>
-            <Ionicons name="swap-vertical" size={18} color={tema.muted} />
-          </Pressable>
-        </View>
+        <PilihMapel value={subjectId} onChange={setSubjectId} />
 
         {sumber === "file" ? (
           <Pressable onPress={pilihFile} style={s.dropzone}>
@@ -155,40 +146,6 @@ export default function BuatMateriScreen() {
         ) : null}
       </ScrollView>
 
-      {/* picker mata pelajaran */}
-      <Modal visible={pickerBuka} transparent animationType="slide" onRequestClose={() => setPickerBuka(false)}>
-        <Pressable style={s.modalBg} onPress={() => setPickerBuka(false)} />
-        <View style={s.modalCard}>
-          <Text style={{ color: tema.teks, fontSize: 18, fontWeight: "800", marginBottom: 12 }}>
-            Pilih Mata Pelajaran
-          </Text>
-          <ScrollView style={{ maxHeight: 300 }}>
-            <Pressable
-              onPress={() => {
-                setSubjectId("");
-                setPickerBuka(false);
-              }}
-              style={s.mapelBaris}
-            >
-              <Ionicons name="remove-circle-outline" size={18} color={tema.muted} />
-              <Text style={{ color: tema.muted }}>Tanpa kategori</Text>
-            </Pressable>
-            {(subjects.data ?? []).map((sub) => (
-              <Pressable
-                key={sub.id}
-                onPress={() => {
-                  setSubjectId(sub.id);
-                  setPickerBuka(false);
-                }}
-                style={s.mapelBaris}
-              >
-                <Ionicons name="folder-outline" size={18} color={tema.muted} />
-                <Text style={{ color: tema.teks }}>{sub.nama}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
     </Screen>
   );
 }
