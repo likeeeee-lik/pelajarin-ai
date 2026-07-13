@@ -36,7 +36,7 @@ export default function PeringkatScreen() {
   return (
     <Screen>
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 10 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 10 }}
         data={entries}
         keyExtractor={(e) => e.userId}
         ListHeaderComponent={

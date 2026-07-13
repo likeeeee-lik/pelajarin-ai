@@ -17,7 +17,7 @@ export default function UjianScreen() {
   return (
     <Screen>
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 14 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 14 }}
         data={items}
         keyExtractor={(x) => x.id}
         ListHeaderComponent={

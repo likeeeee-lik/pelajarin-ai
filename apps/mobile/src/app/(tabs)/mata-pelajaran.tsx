@@ -45,7 +45,7 @@ export default function MataPelajaranScreen() {
   return (
     <Screen>
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}
         data={list}
         keyExtractor={(x) => x.id}
         ListHeaderComponent={

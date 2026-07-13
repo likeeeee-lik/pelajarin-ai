@@ -55,7 +55,7 @@ export default function ProfilScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
         {/* header profil */}
         <View style={s.headerCard}>
           <View style={s.avatar}>

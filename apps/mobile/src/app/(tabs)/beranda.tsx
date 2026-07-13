@@ -67,7 +67,7 @@ export default function BerandaScreen() {
   return (
     <Screen>
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}
         data={daftar}
         keyExtractor={(m) => m.id}
         ListHeaderComponent={
@@ -358,7 +358,7 @@ const s = StyleSheet.create({
   fab: {
     position: "absolute",
     right: 20,
-    bottom: 20,
+    bottom: 104,
     height: 58,
     width: 58,
     borderRadius: 29,

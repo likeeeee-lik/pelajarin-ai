@@ -108,3 +108,10 @@ Avatar + nama + email + badge **Free Plan**. Pengaturan Profil (nama/email-terku
 - Pembayaran/paket Pro = belum ada (butuh Midtrans/Xendit + gating Pro nyata).
 - Yang SUDAH nyata & siap dipakai mobile: auth lokal, /me /stats /materials /subjects, prediksi soal, note workspace (chapter/mindmap/flashcard/kuis/chat), verifikasi email, refresh token.
 - Note workspace detail (buka materi → tab catatan/mindmap/flashcard/kuis/chat) ada di web; layar mobile-nya belum terlihat di ss (mungkin 34/36 belum dibaca) — desain mengikuti web.
+
+## NAVBAR MELAYANG (2026-07-12)
+Bottom tab bar **mengambang**, bukan menempel tepi (sesuai ss 26–28):
+`position:absolute`, `left/right:14`, `bottom = max(insets.bottom,10)+6`, `height:66`,
+`borderRadius:24` (membulat penuh di keempat sudut), border 1px penuh, elevation 12 + shadow.
+Karena melayang & menimpa konten: semua layar tab pakai `paddingBottom: 130`, dan **FAB Beranda
+naik ke `bottom: 104`** agar tak tertutup. Kalau menambah layar tab baru, ikuti angka ini.
