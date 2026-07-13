@@ -6,7 +6,8 @@ import { Screen, Tombol } from "@/components/ui";
 import { tema } from "@/lib/tema";
 
 /**
- * Welcome (ss 21) — muncul setelah wizard, sebelum punya akun.
+ * Welcome (ss 21) — LAYAR PERTAMA saat app dibuka tanpa sesi.
+ * Urutan: Welcome → Daftar → Masuk → Splash → Wizard → Dashboard.
  *
  * Referensi menampilkan "Daftar dengan Google", tapi OAuth belum dibangun
  * (ikut hilang saat Logto dilepas). Tombol yang error saat ditekan lebih buruk
@@ -28,7 +29,7 @@ export default function WelcomeScreen() {
         <View style={{ alignItems: "center", gap: 4 }}>
           <Text style={{ color: tema.teks, fontSize: 19, fontWeight: "800" }}>Buat akun baru</Text>
           <Text style={{ color: tema.muted, textAlign: "center" }}>
-            Profil belajarmu sudah siap. Buat akun untuk menyimpannya.
+            Mulai belajar dengan AI di Pelajarin.ai
           </Text>
         </View>
 

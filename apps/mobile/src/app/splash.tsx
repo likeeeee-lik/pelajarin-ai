@@ -3,7 +3,6 @@ import { Animated, Easing, Text, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { meApi } from "@/lib/api/resources";
-import { ambilOnboardingPending } from "@/lib/api/tokens";
 import { LogoMark } from "@/components/logo";
 import { tema } from "@/lib/tema";
 
@@ -34,16 +33,12 @@ export default function SplashScreen() {
     const tunggu = new Promise((r) => setTimeout(r, MINIMAL_MS));
 
     (async () => {
+      // Satu-satunya titik keputusan setelah login: user baru → wizard,
+      // user lama → dashboard. Jangan taruh gate serupa di tempat lain (loop).
       let tujuan: "/onboarding" | "/beranda" = "/beranda";
       try {
-        // Wizard dikerjakan sebelum akun ada → kirim hasilnya sekarang.
-        const pending = await ambilOnboardingPending();
-        let p = await meApi.get();
-        if (pending && !p.onboardingCompleted) {
-          p = await meApi.update({ onboardingCompleted: true });
-        }
+        const p = await meApi.get();
         qc.setQueryData(["me"], p);
-        // Akun lama yang belum pernah onboarding → kerjakan wizard dulu.
         if (!p.onboardingCompleted) tujuan = "/onboarding";
       } catch {
         /* jangan jebak user bila API bermasalah */

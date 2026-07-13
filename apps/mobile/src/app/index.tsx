@@ -5,14 +5,14 @@ import { adaSesi } from "@/lib/auth";
 import { tema } from "@/lib/tema";
 
 /**
- * Rute awal. Sesuai urutan referensi (docs/ss/app): pengunjung baru langsung
- * masuk wizard onboarding — akun dibuat SETELAH wizard, bukan sebelumnya.
+ * Rute awal. Urutan referensi: AUTH DULU (Welcome → Daftar/Masuk), wizard
+ * dikerjakan setelah login. Lihat docs/ai-memory/mobile-app-spec.md.
  */
 export default function Index() {
-  const [tujuan, setTujuan] = useState<"/beranda" | "/onboarding" | null>(null);
+  const [tujuan, setTujuan] = useState<"/beranda" | "/welcome" | null>(null);
 
   useEffect(() => {
-    adaSesi().then((punya) => setTujuan(punya ? "/beranda" : "/onboarding"));
+    adaSesi().then((punya) => setTujuan(punya ? "/beranda" : "/welcome"));
   }, []);
 
   if (!tujuan) {

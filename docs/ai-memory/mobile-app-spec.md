@@ -4,26 +4,36 @@
 > Kalau butuh detail layar, baca dari sini. Buka `docs/ss/app` hanya bila ada
 > layar yang benar-benar belum tercatat (mis. ss 34/36).
 
-## ⚠️ URUTAN APP — FINAL (direvisi 2026-07-12, ikut penomoran folder)
+## ⚠️ URUTAN APP MOBILE — FINAL, JANGAN DIUBAH LAGI (user menegaskan 2× pada 2026-07-12)
 
-**Buka app → Wizard 20 pertanyaan (ANONIM) → Hasil → Welcome/Buat akun → Masuk → Splash → Dashboard**
+**Buka app → Welcome (Daftar/Masuk) → Daftar → Masuk → Splash → Wizard → Dashboard**
 
-Persis penomoran `docs/ss/app`: ss 1–20 wizard · ss 21 welcome · ss 22–23 login · ss 24 splash · ss 25+ app.
-**Sama dengan funnel web** (onboarding sebelum daftar).
+**AUTH DULU, WIZARD BELAKANGAN.**
 
-RIWAYAT (jangan diulang): sempat dibuat "Daftar → Masuk → Splash → Wizard" pada 2026-07-12
-pagi karena user meminta lisan; sore user mengoreksi → **ikuti urutan folder**. Sekarang final.
+### ⚠️ JEBAKAN: penomoran folder `docs/ss/app` MENYESATKAN
+Nomor berkas menaruh wizard di **ss 1–20** dan auth di **ss 21–24**, seolah wizard duluan.
+**Itu salah.** Lihat **stempel waktu di dalam screenshot**: auth **18.55–18.56**, wizard
+**18.57–19.01** → auth direkam LEBIH DULU. Nomor berkas ≠ urutan alur.
+Saya pernah tertipu ini dan membangun funnel wizard-duluan (commit 7897468) — user langsung
+mengoreksi. **Jangan ulangi. Auth dulu.**
 
-Implementasi funnel anonim:
-- `index.tsx`: ada sesi → `/beranda`; belum → `/onboarding`.
-- `onboarding.tsx` jalan TANPA login. Selesai/Lewati:
-  - sudah login → `PATCH /me {onboardingCompleted:true}` → `/beranda`
-  - belum login → simpan penanda `pendingOnboarding` (expo-secure-store) → `/welcome`
-- `welcome.tsx` (ss 21): logo + "Buat akun" + "Sudah punya akun? Masuk". (Tombol Google TIDAK
-  ditampilkan — belum ada OAuth; tombol mati lebih buruk daripada tidak ada.)
-- `splash.tsx` = titik keputusan: ambil `/me`; bila ada penanda pending → PATCH selesai +
-  hapus penanda → `/beranda`. Bila `onboardingCompleted=false` → `/onboarding`. Selain itu → `/beranda`.
-- Gate di `(tabs)/_layout.tsx` **DIHAPUS** — splash yang memutuskan, supaya tak ada loop.
+### Beda dengan WEB (sengaja)
+| | Urutan |
+|---|---|
+| **Web** | Wizard (anonim) → Daftar → App |
+| **Mobile** | Welcome → Daftar → Masuk → Splash → Wizard → App |
+
+### Implementasi
+- `index.tsx`: ada sesi → `/beranda`; belum → `/welcome`.
+- `welcome.tsx` (ss 21): logo + "Daftar dengan Email" + "Sudah punya akun? Masuk".
+  Tombol **Google TIDAK ditampilkan** — OAuth belum ada; tombol mati lebih buruk daripada tidak ada.
+- `daftar.tsx`: registrasi **sengaja TIDAK auto-login** → `hapusToken()` → `/masuk` (banner hijau
+  "Akun berhasil dibuat" + email terisi otomatis).
+- `masuk.tsx`: login sukses → `/splash`.
+- `splash.tsx` = **satu-satunya titik keputusan** setelah login: logo (min 1400ms) + ambil `/me` →
+  `onboardingCompleted=false` ? `/onboarding` : `/beranda`.
+- `onboarding.tsx`: SELALU dalam keadaan login. Selesai/Lewati → `PATCH /me {onboardingCompleted:true}` → `/beranda`.
+- **JANGAN taruh gate onboarding di `(tabs)/_layout.tsx`** — dua tempat yang memutuskan = loop bolak-balik (pernah terjadi).
 
 ## ALUR AUTH MOBILE — DIPUTUSKAN USER (2026-07-12, saat tes di HP)
 **Urutan wajib: Daftar → (balik ke) Masuk → Splash logo → Wizard → Dashboard.**
