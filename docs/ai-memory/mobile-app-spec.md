@@ -62,7 +62,7 @@ Layar (17): `masuk` `daftar` `splash` `onboarding` · 5 tab (`beranda` `mata-pel
 
 **PERINGKAT SUDAH NYATA (2026-07-12)**: endpoint baru `GET /leaderboard?sort=xp|streak` (LeaderboardModule) — user diurutkan dari `Profile.xp`/`Streak.current` yang memang ada di DB, seri dipecah oleh nama agar stabil. Balasan: `entries` (rank, nama, avatar, level, xp, streak, `aku`), `akuRank`, `total`. Layar `(tabs)/peringkat` menampilkannya (toggle XP/Streak, piala 3 besar, baris sendiri disorot). **Datanya asli — XP semua 0 karena belum ada yang MENAIKKAN XP; begitu gamifikasi nyala, layar ini langsung hidup tanpa diubah.** Verified: 7 user, akuRank benar, tanpa token 401.
 
-**BELUM ADA**: Google OAuth (dibuang bersama Logto — harus dibangun sendiri: endpoint `/auth/google` + expo-auth-session, kemungkinan butuh development build, bukan Expo Go) · **sistem yang menaikkan XP/streak** (tabel & endpoint sudah siap, tinggal event-nya) · pembayaran · verifikasi email di mobile (cuma banner "buka web") · ikon search Beranda masih hiasan.
+**BELUM ADA**: Google OAuth (dibuang bersama Logto — harus dibangun sendiri: endpoint `/auth/google` + expo-auth-session, kemungkinan butuh development build, bukan Expo Go) · **sistem yang menaikkan XP/streak** (tabel & endpoint sudah siap, tinggal event-nya) · pembayaran · verifikasi email di mobile (cuma banner "buka web") 
 
 ## Spesifikasi asli (dari 38 layar)
 

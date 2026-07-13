@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,15 +41,26 @@ export default function BerandaScreen() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"semua" | MaterialType>("semua");
   const [sheet, setSheet] = useState(false);
+  const cariRef = useRef<TextInput>(null);
+
+  /** Ikon search di header → fokuskan kotak cari (dulu cuma hiasan). */
+  const fokusCari = () => cariRef.current?.focus();
 
   const daftar = useMemo(() => {
     const src = materials.data ?? [];
+    const cari = q.trim().toLowerCase();
     return src.filter((m) => {
       const cocokFilter = filter === "semua" || m.tipe === filter;
-      const cocokCari = !q.trim() || m.judul.toLowerCase().includes(q.trim().toLowerCase());
+      const cocokCari =
+        !cari ||
+        m.judul.toLowerCase().includes(cari) ||
+        (m.subject?.nama.toLowerCase().includes(cari) ?? false);
       return cocokFilter && cocokCari;
     });
   }, [materials.data, filter, q]);
+
+  /** Sedang menyaring? Menentukan empty state mana yang tampil. */
+  const menyaring = !!q.trim() || filter !== "semua";
 
   if (me.isLoading) return <Screen><Memuat /></Screen>;
 
@@ -81,9 +92,9 @@ export default function BerandaScreen() {
                 <Chip ikon="star" teks={`Lvl ${me.data?.level ?? 1}`} />
                 <Chip ikon="sparkles" teks={`${me.data?.xp ?? 0} XP`} />
               </View>
-              <View style={s.searchBtn}>
+              <Pressable onPress={fokusCari} style={s.searchBtn}>
                 <Ionicons name="search" size={18} color="#fff" />
-              </View>
+              </Pressable>
             </View>
 
             <Text style={{ color: tema.teks, fontSize: 24, fontWeight: "800" }}>
@@ -159,18 +170,29 @@ export default function BerandaScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
               <Ionicons name="library" size={18} color={tema.brand} />
               <Text style={{ color: tema.teks, fontSize: 16, fontWeight: "700" }}>Koleksi Kamu</Text>
-              <Text style={{ color: tema.muted, fontSize: 12 }}>{materials.data?.length ?? 0} catatan</Text>
+              <Text style={{ color: tema.muted, fontSize: 12 }}>
+                {menyaring
+                  ? `${daftar.length} dari ${materials.data?.length ?? 0} catatan`
+                  : `${materials.data?.length ?? 0} catatan`}
+              </Text>
             </View>
 
             <View style={s.search}>
               <Ionicons name="search" size={16} color={tema.muted} />
               <TextInput
+                ref={cariRef}
                 value={q}
                 onChangeText={setQ}
-                placeholder="Cari catatan..."
+                placeholder="Cari catatan atau mata pelajaran..."
                 placeholderTextColor={tema.muted}
+                returnKeyType="search"
                 style={{ flex: 1, color: tema.teks, fontSize: 14 }}
               />
+              {q ? (
+                <Pressable onPress={() => setQ("")} hitSlop={10}>
+                  <Ionicons name="close-circle" size={17} color={tema.muted} />
+                </Pressable>
+              ) : null}
             </View>
 
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -193,7 +215,26 @@ export default function BerandaScreen() {
         }
         renderItem={({ item }) => <MateriBaris item={item} />}
         ListEmptyComponent={
-          materials.isLoading ? null : (
+          materials.isLoading ? null : menyaring ? (
+            // Punya materi, tapi tak ada yang cocok — jangan tampilkan ajakan
+            // "mulai dari satu materi", itu bikin pencarian terasa rusak.
+            <View style={s.emptyCari}>
+              <Ionicons name="search-outline" size={26} color={tema.muted} />
+              <Text style={{ color: tema.teks, fontWeight: "700", marginTop: 8 }}>Tidak ditemukan</Text>
+              <Text style={{ color: tema.muted, textAlign: "center", marginTop: 4, fontSize: 13 }}>
+                {q.trim() ? `Tidak ada catatan yang cocok dengan "${q.trim()}".` : "Tidak ada catatan pada filter ini."}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setQ("");
+                  setFilter("semua");
+                }}
+                style={s.resetBtn}
+              >
+                <Text style={{ color: tema.brand, fontWeight: "700", fontSize: 13 }}>Hapus pencarian</Text>
+              </Pressable>
+            </View>
+          ) : (
             <Pressable onPress={() => setSheet(true)} style={s.emptyCard}>
               <Ionicons name="documents-outline" size={28} color={tema.brand} />
               <Text style={{ color: tema.teks, fontWeight: "700", marginTop: 8 }}>Mulai dari satu materi</Text>
@@ -338,6 +379,23 @@ const s = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 7,
+  },
+  emptyCari: {
+    alignItems: "center",
+    backgroundColor: tema.card,
+    borderWidth: 1,
+    borderColor: tema.border,
+    borderRadius: 18,
+    padding: 26,
+  },
+  resetBtn: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "rgba(249,115,22,0.5)",
+    backgroundColor: "rgba(249,115,22,0.1)",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   emptyCard: {
     alignItems: "center",
