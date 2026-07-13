@@ -112,6 +112,6 @@ Avatar + nama + email + badge **Free Plan**. Pengaturan Profil (nama/email-terku
 ## NAVBAR MELAYANG (2026-07-12)
 Bottom tab bar **mengambang**, bukan menempel tepi (sesuai ss 26–28):
 `position:absolute`, `left/right:14`, `bottom = max(insets.bottom,10)+6`, `height:66`,
-`borderRadius:24` (membulat penuh di keempat sudut), border 1px penuh, elevation 12 + shadow.
+**bentuk PIL**: `height:58`, `borderRadius: 58/2 = 29` (radius = setengah tinggi → ujung bulat penuh), `left/right:12`, border 1px penuh, elevation 12 + shadow. Ikon 20px, label 9.5px.
 Karena melayang & menimpa konten: semua layar tab pakai `paddingBottom: 130`, dan **FAB Beranda
 naik ke `bottom: 104`** agar tak tertutup. Kalau menambah layar tab baru, ikuti angka ini.
