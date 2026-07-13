@@ -50,6 +50,16 @@ Layar (17): `masuk` `daftar` `splash` `onboarding` · 5 tab (`beranda` `mata-pel
 - Token di expo-secure-store; `http.ts` refresh senyap saat 401. expo-router grup + typed routes.
 - Paket kunci: `@react-native-community/slider`, `react-native-svg` (logo), `expo-document-picker`, `@expo/vector-icons`.
 
+## WORKSPACE MOBILE = SETARA WEB (2026-07-12)
+`catatan/[id]` kini **6 sub-tab** (sebelumnya 5), sama dengan web:
+**Bab · Mind Map · Flashcard · Kuis · Dokumen · Chat**
+- **Dokumen** (baru): daftar file asli; ketuk → `GET /materials/:id/files/:fileId/url` (signed URL Supabase) → dibuka lewat `Linking.openURL`. Empty state jujur bila materi dari teks/YouTube.
+- **Bagikan** (baru): `POST /materials/:id/share {enable:true}` → `shareSlug` → dibagikan lewat `Share` bawaan RN sebagai `{EXPO_PUBLIC_WEB_URL}/publik/{slug}`. **Butuh env `EXPO_PUBLIC_WEB_URL`** (IP LAN web, bukan localhost).
+- **Hapus materi** (baru): `DELETE /materials/:id` + konfirmasi Alert → balik ke Beranda.
+- **Fokus Timer** (baru, `components/fokus-timer.tsx`): Pomodoro 25:00 play/pause/reset di header workspace — padanan "Fokus 25:00" di sidebar web.
+- **Ekspor PDF SENGAJA TIDAK dibuat di mobile** — web sudah punya; padanan mobile = Bagikan (tautan publik).
+- Picker mapel: `components/pilih-mapel.tsx` **dipakai bersama** buat-materi & buat-prediksi (cari + "Buat X", cerminan SubjectCombobox web). Nama persis sama → tombol Buat disembunyikan (cegah duplikat).
+
 **PERINGKAT SUDAH NYATA (2026-07-12)**: endpoint baru `GET /leaderboard?sort=xp|streak` (LeaderboardModule) — user diurutkan dari `Profile.xp`/`Streak.current` yang memang ada di DB, seri dipecah oleh nama agar stabil. Balasan: `entries` (rank, nama, avatar, level, xp, streak, `aku`), `akuRank`, `total`. Layar `(tabs)/peringkat` menampilkannya (toggle XP/Streak, piala 3 besar, baris sendiri disorot). **Datanya asli — XP semua 0 karena belum ada yang MENAIKKAN XP; begitu gamifikasi nyala, layar ini langsung hidup tanpa diubah.** Verified: 7 user, akuRank benar, tanpa token 401.
 
 **BELUM ADA**: Google OAuth (dibuang bersama Logto — harus dibangun sendiri: endpoint `/auth/google` + expo-auth-session, kemungkinan butuh development build, bukan Expo Go) · **sistem yang menaikkan XP/streak** (tabel & endpoint sudah siap, tinggal event-nya) · pembayaran · verifikasi email di mobile (cuma banner "buka web") · ikon search Beranda masih hiasan.

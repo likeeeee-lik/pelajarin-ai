@@ -53,6 +53,17 @@ export const materialsApi = {
   }) => apiFetch<Material>("/materials", { method: "POST", body: JSON.stringify(input) }),
   upload: (form: FormData) => apiFetch<Material>("/materials/upload", { method: "POST", body: form }),
   remove: (id: string) => apiFetch<{ ok: true }>(`/materials/${id}`, { method: "DELETE" }),
+  /** Signed URL untuk pratinjau/unduh file asli. */
+  fileUrl: (materialId: string, fileId: string) =>
+    apiFetch<{ url: string | null; name: string; mime: string }>(
+      `/materials/${materialId}/files/${fileId}/url`,
+    ),
+  /** Aktif/nonaktifkan tautan publik. */
+  share: (id: string, enable: boolean) =>
+    apiFetch<{ sharePublic: boolean; shareSlug: string | null }>(`/materials/${id}/share`, {
+      method: "POST",
+      body: JSON.stringify({ enable }),
+    }),
 };
 
 export const chaptersApi = {

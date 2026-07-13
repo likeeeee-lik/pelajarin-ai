@@ -1,6 +1,17 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "react-native-markdown-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,22 +24,54 @@ import {
   quizzesApi,
 } from "@/lib/api/resources";
 import type { Material, MindmapNode, Quiz, QuizQuestion } from "@/lib/api/types";
+import { FokusTimer } from "@/components/fokus-timer";
 import { Memuat, Screen, Tombol } from "@/components/ui";
 import { tema } from "@/lib/tema";
 
-type Tab = "bab" | "mindmap" | "flashcard" | "kuis" | "chat";
+type Tab = "bab" | "mindmap" | "flashcard" | "kuis" | "dokumen" | "chat";
 const TABS: { key: Tab; label: string; ikon: React.ComponentProps<typeof Ionicons>["name"] }[] = [
   { key: "bab", label: "Bab", ikon: "list" },
   { key: "mindmap", label: "Mind Map", ikon: "git-network" },
   { key: "flashcard", label: "Flashcard", ikon: "layers" },
   { key: "kuis", label: "Kuis", ikon: "help-circle" },
+  { key: "dokumen", label: "Dokumen", ikon: "folder-open" },
   { key: "chat", label: "Chat", ikon: "chatbubbles" },
 ];
 
+/** Alamat web, untuk membentuk tautan publik hasil "Bagikan". */
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? "http://localhost:3000";
+
 export default function CatatanScreen() {
+  const qc = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const material = useQuery({ queryKey: ["material", id], queryFn: () => materialsApi.get(id), enabled: !!id });
   const [tab, setTab] = useState<Tab>("bab");
+
+  const bagikan = useMutation({
+    mutationFn: () => materialsApi.share(id, true),
+    onSuccess: async (r) => {
+      qc.invalidateQueries({ queryKey: ["material", id] });
+      if (r.shareSlug) {
+        await Share.share({ message: `${WEB_URL}/publik/${r.shareSlug}` }).catch(() => undefined);
+      }
+    },
+  });
+
+  const hapus = useMutation({
+    mutationFn: () => materialsApi.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["materials"] });
+      qc.invalidateQueries({ queryKey: ["stats"] });
+      router.replace("/beranda");
+    },
+  });
+
+  function konfirmasiHapus() {
+    Alert.alert("Hapus catatan?", "Semua bab, flashcard, kuis, dan file di dalamnya ikut terhapus.", [
+      { text: "Batal", style: "cancel" },
+      { text: "Hapus", style: "destructive", onPress: () => hapus.mutate() },
+    ]);
+  }
 
   if (material.isLoading) return <Screen><Memuat /></Screen>;
   const m = material.data;
@@ -46,6 +89,23 @@ export default function CatatanScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: m.judul }} />
+
+      {/* aksi: fokus timer · bagikan · hapus */}
+      <View style={s.aksi}>
+        <FokusTimer />
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={() => bagikan.mutate()} disabled={bagikan.isPending} style={s.aksiBtn}>
+          {bagikan.isPending ? (
+            <ActivityIndicator size="small" color={tema.muted} />
+          ) : (
+            <Ionicons name="share-social-outline" size={17} color={tema.muted} />
+          )}
+        </Pressable>
+        <Pressable onPress={konfirmasiHapus} style={s.aksiBtn}>
+          <Ionicons name="trash-outline" size={17} color={tema.merah} />
+        </Pressable>
+      </View>
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={s.tabbar}>
         {TABS.map((t) => {
           const aktif = tab === t.key;
@@ -63,9 +123,65 @@ export default function CatatanScreen() {
         {tab === "mindmap" && <MindmapTab materialId={m.id} />}
         {tab === "flashcard" && <FlashcardTab materialId={m.id} />}
         {tab === "kuis" && <KuisTab materialId={m.id} />}
+        {tab === "dokumen" && <DokumenTab material={m} />}
         {tab === "chat" && <ChatTab materialId={m.id} />}
       </View>
     </Screen>
+  );
+}
+
+/** Tab Dokumen: file asli yang diunggah — buka/unduh lewat signed URL. */
+function DokumenTab({ material }: { material: Material }) {
+  const [membuka, setMembuka] = useState<string | null>(null);
+
+  async function buka(fileId: string) {
+    setMembuka(fileId);
+    try {
+      const { url } = await materialsApi.fileUrl(material.id, fileId);
+      if (url) await Linking.openURL(url);
+      else Alert.alert("File tidak tersedia", "Penyimpanan file belum aktif untuk materi ini.");
+    } catch (e) {
+      Alert.alert("Gagal membuka file", e instanceof Error ? e.message : "Coba lagi.");
+    } finally {
+      setMembuka(null);
+    }
+  }
+
+  const kb = (n: number) => (n < 1024 * 1024 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`);
+
+  if (material.files.length === 0) {
+    return (
+      <View style={{ padding: 24, alignItems: "center" }}>
+        <Ionicons name="folder-open-outline" size={30} color={tema.muted} />
+        <Text style={{ color: tema.teks, fontWeight: "700", marginTop: 10 }}>Tidak ada file</Text>
+        <Text style={{ color: tema.muted, textAlign: "center", marginTop: 4, fontSize: 13 }}>
+          Materi ini dibuat dari teks atau YouTube, bukan unggahan file.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
+      {material.files.map((f) => (
+        <Pressable key={f.id} onPress={() => buka(f.id)} style={s.fileBaris}>
+          <View style={s.fileIkon}>
+            {membuka === f.id ? (
+              <ActivityIndicator size="small" color={tema.brand} />
+            ) : (
+              <Ionicons name="document-text" size={19} color={tema.brand} />
+            )}
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ color: tema.teks, fontWeight: "600" }} numberOfLines={1}>
+              {f.name}
+            </Text>
+            <Text style={{ color: tema.muted, fontSize: 12 }}>{kb(f.size)}</Text>
+          </View>
+          <Ionicons name="open-outline" size={17} color={tema.muted} />
+        </Pressable>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -453,6 +569,41 @@ const md = StyleSheet.create({
 });
 
 const s = StyleSheet.create({
+  aksi: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  aksiBtn: {
+    height: 36,
+    width: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: tema.border,
+    backgroundColor: tema.card,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fileBaris: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: tema.card,
+    borderWidth: 1,
+    borderColor: tema.border,
+    borderRadius: 14,
+    padding: 14,
+  },
+  fileIkon: {
+    height: 40,
+    width: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(249,115,22,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tabbar: { gap: 8, paddingHorizontal: 16, paddingVertical: 12 },
   tabBtn: {
     flexDirection: "row",
