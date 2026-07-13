@@ -30,6 +30,14 @@ export const statsApi = {
   get: () => apiFetch<UserStats>("/stats"),
 };
 
+/** Panel admin — baca-saja. Dijaga AdminGuard di server (bukan cuma UI). */
+export const adminApi = {
+  users: (q: string, page: number) =>
+    apiFetch<import("./types").AdminUsersResult>(
+      `/admin/users?q=${encodeURIComponent(q)}&page=${page}`,
+    ),
+};
+
 /** Kumpulan fungsi API per-resource (dipakai lewat React Query di komponen). */
 
 export const subjectsApi = {

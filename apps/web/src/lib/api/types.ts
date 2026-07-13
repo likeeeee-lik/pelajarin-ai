@@ -115,6 +115,27 @@ export interface PublicMaterial {
   chapters: { urutan: number; judul: string; kontenMd: string | null }[];
 }
 
+export type Role = "user" | "admin";
+
+/** Baris pengguna di panel admin (baca-saja). */
+export interface AdminUserRow {
+  id: string;
+  nama: string;
+  email: string;
+  emailVerified: boolean;
+  role: Role;
+  plan: "free" | "pro" | "institusi";
+  createdAt: string;
+  materials: number;
+  predictions: number;
+}
+export interface AdminUsersResult {
+  rows: AdminUserRow[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
 /** Profil user dari API (`GET /me`), sumber identitas asli di UI. */
 export interface Profile {
   id: string;
@@ -122,6 +143,7 @@ export interface Profile {
   email: string;
   emailVerified: boolean;
   avatarUrl: string | null;
+  role: Role;
   plan: "free" | "pro" | "institusi";
   bahasaTampilan: string;
   bahasaGenerasi: string;

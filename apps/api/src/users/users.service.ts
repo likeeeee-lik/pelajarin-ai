@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import type { Role } from "@prisma/client";
 import type { AuthUser } from "../auth/jwt.types";
 import { PrismaService } from "../prisma/prisma.service";
 import { LogtoAdmin } from "../logto/logto-admin";
@@ -7,12 +8,25 @@ import { LogtoAdmin } from "../logto/logto-admin";
 const PLACEHOLDER_DOMAIN = "@pelajarin.local";
 const PLACEHOLDER_NAME = "Pengguna";
 
+/**
+ * Admin ditentukan dari env, BUKAN dari aplikasi — tak ada endpoint yang bisa
+ * menaikkan peran, jadi pengguna mustahil mengangkat dirinya sendiri.
+ * Menambah admin = tambah email di ADMIN_EMAILS lalu restart API.
+ */
+function emailAdmin(): string[] {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export interface ProfileDto {
   id: string;
   nama: string;
   email: string;
   emailVerified: boolean;
   avatarUrl: string | null;
+  role: Role;
   plan: "free" | "pro" | "institusi";
   bahasaTampilan: string;
   bahasaGenerasi: string;
@@ -59,12 +73,25 @@ export class UsersService {
     const enriched = await this.enrichIdentity(p);
     if (enriched) p = enriched;
 
+    // Selaraskan peran dengan ADMIN_EMAILS. Dua arah: email yang dihapus dari
+    // daftar akan turun jadi user lagi — jadi mencabut admin cukup lewat env.
+    const harusAdmin = emailAdmin().includes(p.email.toLowerCase());
+    const seharusnya: Role = harusAdmin ? "admin" : "user";
+    if (p.role !== seharusnya) {
+      p = await this.prisma.profile.update({
+        where: { id: p.id },
+        data: { role: seharusnya },
+        include: { streak: true },
+      });
+    }
+
     return {
       id: p.id,
       nama: p.nama,
       email: p.email,
       emailVerified: p.emailVerified,
       avatarUrl: p.avatarUrl,
+      role: p.role,
       plan: p.plan,
       bahasaTampilan: p.bahasaTampilan,
       bahasaGenerasi: p.bahasaGenerasi,

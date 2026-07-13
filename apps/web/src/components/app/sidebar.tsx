@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, Home, LogOut, Rocket, User } from "lucide-react";
+import { ChevronLeft, Home, LogOut, Rocket, Shield, User } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { signOut } from "@/lib/auth";
 import { useSession } from "@/lib/use-session";
@@ -68,6 +68,22 @@ export function Sidebar({
             </Link>
           );
         })}
+
+        {/* Admin — hanya untuk admin. Server tetap menjaga endpoint-nya (AdminGuard). */}
+        {profile?.role === "admin" ? (
+          <Link
+            href="/app/admin"
+            title="Panel Admin"
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              pathname.startsWith("/app/admin")
+                ? "bg-brand text-white shadow-brand"
+                : "text-muted hover:bg-ink-600 hover:text-white"
+            } ${collapsed ? "justify-center" : ""}`}
+          >
+            <Shield className="h-5 w-5 shrink-0" />
+            {!collapsed && <span>Panel Admin</span>}
+          </Link>
+        ) : null}
 
         {/* Tingkatkan Pro (menonjol) */}
         <Link

@@ -306,3 +306,13 @@ Sesuai urutan screenshot web (onboarding no.3–26 sebelum auth no.27), funnelny
 - Logo & warna brand resmi (konfirmasi hex oranye), font.
 - Akun: Supabase, Anthropic, Groq, Midtrans/Xendit, Google/Discord OAuth, Play/App Store developer.
 - Konfirmasi domain: `pelajarin.ai`, `auth.pelajarin.ai`.
+
+## PANEL ADMIN — baca-saja (2026-07-12)
+User memilih: admin lewat **`ADMIN_EMAILS`** di `apps/api/.env`, kemampuan **hanya lihat & cari pengguna**.
+- Schema: `enum Role { user admin }` + `Profile.role` (default user). `prisma db push` sudah jalan.
+- **Kenaikan peran otomatis & DUA ARAH** di `UsersService.getProfile()`: email ada di ADMIN_EMAILS → `admin`; dihapus dari daftar → turun jadi `user` lagi. **Tak ada endpoint apa pun yang mengubah peran** → pengguna mustahil mengangkat dirinya sendiri.
+- `AdminGuard` (`auth/admin.guard.ts`) membaca peran dari **DATABASE tiap request**, bukan dari klaim JWT — supaya pencabutan admin berlaku SEKETIKA (JWT hidup 15 mnt).
+- `GET /admin/users?q=&page=` (AdminModule) — baca-saja, 25/halaman, cari nama/email. **Tidak ada** endpoint ubah plan / hapus user (sengaja, sesuai pilihan user).
+- Web: `/app/admin` (tabel + cari + paginasi) & tautan sidebar **hanya muncul untuk admin** — tapi keamanannya di server, bukan di UI.
+- **⚠️ `.env` TIDAK di-reload oleh ts-node-dev** (hanya mengawasi `src/`). Menambah admin = ubah ADMIN_EMAILS + **restart API sungguhan**.
+- Verified: non-admin → 403 · tanpa token → 401 · email di ADMIN_EMAILS → role naik otomatis, GET /admin/users 200 (9 user), pencarian jalan.
